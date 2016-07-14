@@ -46,6 +46,7 @@
 (setq mouse-wheel-progressive-speed nil) ;; accelerate scrolling
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 (setq cursor-type 'bar)
+(setq w32-pipe-read-delay 0)
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -81,11 +82,11 @@
   :diminish company-mode
   :config
   (add-hook 'after-init-hook 'global-company-mode)
-  (use-package company-irony 
+  (use-package company-irony
   :ensure t
   :config
   (add-to-list 'company-backends 'company-irony))
-  (use-package company-jedi 
+  (use-package company-jedi
     :config
     (add-to-list 'company-backends 'company-jedi)))
 
@@ -112,7 +113,7 @@
   :map helm-map
 	      ("[tab]" . helm-execute-persistent-action)
 	      ("C-i" . helm-execute-persistent-action)
-	      ("C-z" .  helm-select-action)) 
+	      ("C-z" .  helm-select-action))
   :config
   (use-package helm-package)
   (use-package helm-projectile)
@@ -120,9 +121,9 @@
 	:bind ("M-i" . helm-swoop))
   (setq helm-mode 1
 		helm-split-window-in-side-p nil
-		helm-move-to-line-cycle-in-source t 
-		helm-ff-search-library-in-sexp t 
-		helm-scroll-amount 4 
+		helm-move-to-line-cycle-in-source t
+		helm-ff-search-library-in-sexp t
+		helm-scroll-amount 4
 		helm-ff-file-name-history-use-recentf t
 		helm-M-x-fuzzy-match t
 		helm-buffers-fuzzy-matching t
@@ -145,7 +146,7 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
 
- (use-package jedi 
+ (use-package jedi
   :ensure t)
 
 ;; ;; Standard Jedi.el setting
@@ -153,13 +154,21 @@
 ;; ;; (setq jedi:complete-on-dot t)
 
 
-(use-package magit 
+(use-package magit
   :bind
   ("C-x g" . magit-status)
   :if is-win
   :config (setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
 
-(use-package monokai-theme 
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+
+(use-package monokai-theme
   :config (load-theme 'monokai t))
 
 (use-package org)
@@ -174,11 +183,22 @@
 (use-package projectile
   :config
   (setq projectile-mode t
-		projectile-global-mode t	
+		projectile-global-mode t
 		projectile-completion-system 'helm
 		helm-projectile-on t
 		projectile-indexing-method 'alien
 		))
+
+(use-package python-mode
+  :config
+  (add-hook 'python-mode-hook
+			(lambda ()
+			  (setq indent-tabs-mode t)
+			  (setq tab-width 4)
+			  (setq py-indent-tabs-mode t)
+			  ;; (add-to-list 'write-file-functions 'delete-trailing-whitespace)
+			  (setq python-indent 4)
+			  )))
 
 (use-package smart-tabs-mode)
 
@@ -196,7 +216,8 @@
   :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )
   (progn
-	(add-hook 'prog-mode-hook #'yas-minor-mode))
+	(add-hook 'prog-mode-hook #'yas-minor-mode)
+	(add-hook 'org-mode-hook #'yas-minor-mode))
   :config
   (progn
 	(yas-reload-all)))
@@ -217,7 +238,7 @@
 		  ;;(define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
 		  ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump))
 		  (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump));; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
-		  
+
 
 (setq-default c-default-style "stroustrup"
 	      c-basic-offset 4
@@ -236,7 +257,7 @@
 (add-hook 'text-mode-hook
 	  (lambda ()
 	    ;; lines are still defined by line-breaks, not display
-	    (visual-line-mode 1) 
+	    (visual-line-mode 1)
 	    (setq line-move-visual t)
 	    ))
 
@@ -277,7 +298,7 @@ the line."
 
 (if is-mac
     (global-set-key (kbd "s-/") 'comment-dwim-line)
-  (global-set-key (kbd "C-/") 'comment-dwim-line)) 
+  (global-set-key (kbd "C-/") 'comment-dwim-line))
 
 
 
@@ -491,14 +512,7 @@ the line."
 ;;     'irony-completion-at-point-async))
 ;; (add-hook 'irony-mode-hook 'my-irony-mode-hook)
 ;; (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-;; (add-hook 'python-mode-hook
-;; 		  (lambda ()
-;; 			(setq indent-tabs-mode t)
-;; 			(setq tab-width 4)
-;; 			(setq py-indent-tabs-mode t)
-;; 			(add-to-list 'write-file-functions 'delete-trailing-whitespace)
-;; 			(setq python-indent 4)
-;; 			))
+
 
 
 ;; (global-auto-highlight-symbol-mode t)

@@ -4,7 +4,7 @@ I recently update to the use of "use-package" for package
 dependencies. Default behavior is set to :ensure, so all dependencies
 will be downloaded automatically on the first start.
 
-Otherwise the config is basically a collection of gathered code
+Otherwise, the config is basically a collection of gathered code
 fragments from all over the web. Maybe you find something useful, have
 fun!
 

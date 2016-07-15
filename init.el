@@ -47,6 +47,8 @@
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 (setq cursor-type 'bar)
 (setq w32-pipe-read-delay 0)
+(setq python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
+(defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -181,15 +183,18 @@
 (use-package ox-jira)
 
 (use-package projectile
+  :diminish projectile-mode
+  :init
+  (setq projectile-keymap-prefix (kbd "C-c p"))
   :config
-  (setq projectile-mode t
-		projectile-global-mode t
-		projectile-completion-system 'helm
-		helm-projectile-on t
+  (projectile-mode t)
+  (projectile-global-mode)
+  (setq projectile-completion-system 'helm
 		projectile-indexing-method 'alien
 		))
 
 (use-package python-mode
+  :disabled
   :config
   (add-hook 'python-mode-hook
 			(lambda ()
@@ -212,6 +217,7 @@
 
 (use-package yasnippet
   ;; :disabled
+  :diminish
   :commands(yas-minor-mode)
   :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )

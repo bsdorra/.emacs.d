@@ -5,13 +5,14 @@
  ;; If there is more than one, they won't work right.
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
+ '(company-quickhelp-mode t)
  '(compilation-message-face (quote default))
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
+ '(paradox-github-token t)
  '(scroll-bar-mode nil)
- '(set-mark-command-repeat-pop t)
- )
+ '(set-mark-command-repeat-pop t))
 
 
 (setq debug-on-error nil)
@@ -45,10 +46,12 @@
 (setq mouse-wheel-scroll-amount '(4 ((shift) . 1))) ;; one line at a time
 (setq mouse-wheel-progressive-speed nil) ;; accelerate scrolling
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-(setq cursor-type 'bar)
+(setq-default cursor-type 'bar)
 (setq w32-pipe-read-delay 0)
 (setq python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
+(setq compilation-auto-jump-to-first-error t)
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
+(setq show-paren-mode t)
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -118,7 +121,9 @@
 	      ("C-z" .  helm-select-action))
   :config
   (use-package helm-package)
-  (use-package helm-projectile)
+  (use-package helm-projectile
+	:config
+	(helm-projectile-on))
   (use-package helm-swoop
 	:bind ("M-i" . helm-swoop))
   (setq helm-mode 1
@@ -158,9 +163,8 @@
 
 (use-package magit
   :bind
-  ("C-x g" . magit-status)
-  :if is-win
-  :config (setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
+  ("C-x g" . magit-status))
+  
 
 (use-package markdown-mode
   :ensure t
@@ -173,6 +177,15 @@
 (use-package monokai-theme
   :config (load-theme 'monokai t))
 
+(use-package multiple-cursors
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this))
+
+(use-package nyan-mode)
+
 (use-package org)
 
 (use-package ob-ipython
@@ -181,6 +194,8 @@
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append))
 
 (use-package ox-jira)
+
+(use-package paradox)
 
 (use-package projectile
   :diminish projectile-mode
@@ -228,13 +243,16 @@
   (progn
 	(yas-reload-all)))
 
+(if is-win
+	(setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
+
 
 (global-set-key (kbd "C-c e") 'fc-eval-and-replace)
 ;; (global-set-key "\C-k" 'kill-whole-line)
 
 (global-set-key (kbd "M-p") (lambda () (interactive) (scroll-down 4)))
 (global-set-key (kbd "M-n") (lambda () (interactive) (scroll-up 4)))
-
+(global-set-key (kbd "M-g") 'goto-line)
 
 (require 'cc-mode)
 ;;;; Auto newline state
@@ -244,13 +262,14 @@
 		  ;;(define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
 		  ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump))
 		  (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump));; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
-
+(add-hook 'c-mode-common-hook 'superword-mode)
 
 (setq-default c-default-style "stroustrup"
 	      c-basic-offset 4
 	      tab-width 4)
 
 (smart-tabs-insinuate 'c++ 'c 'javascript 'python)
+
 
 (defun yank-and-indent ()
   "Yank and then indent the newly formed region according to mode."
@@ -563,3 +582,9 @@ the line."
 ;;         (goto-char (mark t)))
 ;;       (deactivate-mark))))
 ;; (global-set-key (kbd "C-M-SPC") 'highlight-symbol-next)
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

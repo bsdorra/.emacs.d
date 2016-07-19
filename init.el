@@ -32,11 +32,11 @@
 ;; start size
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
-(semantic-mode 1)
-(global-linum-mode 1)
+(semantic-mode 1) 
+(global-linum-mode 1) ;; show line numbers
 (menu-bar-mode 1)
 (tool-bar-mode 0)
-(setq fill-column 80)
+(setq fill-column 120)
 (setq ns-pop-up-frames nil)
 (setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
@@ -49,9 +49,10 @@
 (setq-default cursor-type 'bar)
 (setq w32-pipe-read-delay 0)
 (setq python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
-(setq compilation-auto-jump-to-first-error t)
+(setq compilation-auto-jump-to-first-error t) 
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
-(setq show-paren-mode t)
+(setq show-paren-mode t) ;; show matching brackets
+(delete-selection-mode 1) ;; replace selection on typing or yank
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -73,7 +74,7 @@
 ;; (use-package auctex
 ;;   :ensure t)
 
-(use-package auto-complete)
+;;(use-package auto-complete)
 ;;(ac-config-default)
 
 (use-package cmake-mode
@@ -87,13 +88,25 @@
   :diminish company-mode
   :config
   (add-hook 'after-init-hook 'global-company-mode)
+  (setq company-dabbrev-downcase 0)
+  (setq company-idle-delay 0)
+  (company-quickhelp-mode 1)
   (use-package company-irony
   :ensure t
   :config
   (add-to-list 'company-backends 'company-irony))
   (use-package company-jedi
     :config
-    (add-to-list 'company-backends 'company-jedi)))
+    (add-to-list 'company-backends 'company-jedi)
+	(defun my/python-mode-hook ()
+	(add-to-list 'company-backends 'company-jedi)
+	(add-hook 'python-mode-hook 'my/python-mode-hook)
+	(add-hook 'python-mode-hook 'run-python-internal))))
+
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns))
+	(exec-path-from-shell-initialize)))
 
 (use-package flycheck
   :disabled
@@ -153,8 +166,9 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
 
- (use-package jedi
-  :ensure t)
+;; for company only company-jedi is needed
+;; (use-package jedi
+;;  :ensure t)
 
 ;; ;; Standard Jedi.el setting
 ;; ;; (add-hook 'python-mode-hook 'jedi:setup)
@@ -243,6 +257,32 @@
   (progn
 	(yas-reload-all)))
 
+;; handle tab behavior. decide between yas, indent or company complete
+(defun check-expansion ()
+  (save-excursion
+	(if (looking-at "\\_>") t
+	  (backward-char 1)
+	  (if (looking-at "\\.") t
+		(backward-char 1)
+		(if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+	(yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+	  (minibuffer-complete)
+	(if (or (not yas/minor-mode)
+			(null (do-yas-expand)))
+		(if (check-expansion)
+			(company-complete-common)
+		  (indent-for-tab-command)))))
+
+(global-set-key [tab] 'tab-indent-or-complete)
+
+
 (if is-win
 	(setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
 
@@ -252,7 +292,7 @@
 
 (global-set-key (kbd "M-p") (lambda () (interactive) (scroll-down 4)))
 (global-set-key (kbd "M-n") (lambda () (interactive) (scroll-up 4)))
-(global-set-key (kbd "M-g") 'goto-line)
+;; (global-set-key (kbd "M-g") 'goto-line)
 
 (require 'cc-mode)
 ;;;; Auto newline state

@@ -49,6 +49,7 @@
 (setq w32-pipe-read-delay 0)
 (setq python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
+(setq desktop-save-mode t)
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -194,30 +195,36 @@
 		))
 
 (use-package python-mode
-  :disabled
+  ;; :disabled								
   :config
   (add-hook 'python-mode-hook
-			(lambda ()
+			(lambda ()			
 			  (setq indent-tabs-mode t)
-			  (setq tab-width 4)
 			  (setq py-indent-tabs-mode t)
-			  ;; (add-to-list 'write-file-functions 'delete-trailing-whitespace)
+			  (setq tab-width 4)
 			  (setq python-indent 4)
 			  )))
 
-(use-package smart-tabs-mode)
+
+(use-package smart-tabs-mode
+  :config
+  (smart-tabs-advice py-indent-line py-indent-offset)
+  (smart-tabs-advice py-newline-and-indent py-indent-offset)
+  (smart-tabs-advice py-indent-region py-indent-offset))
 
 (use-package swoop)
 
+;; (use-package visible-mark)
+
 (use-package wgrep)
 
-(use-package which-key
+(use-package which-key 
   :config
   (setq which-key-mode t))
 
 (use-package yasnippet
   ;; :disabled
-  :diminish
+  :diminish yas-minor-mode
   :commands(yas-minor-mode)
   :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )
@@ -400,6 +407,7 @@ the line."
 (setq org-outline-path-complete-in-steps t)
 (setq org-refile-targets (quote ((org-agenda-files :maxlevel . 3))))
 (setq org-refile-use-outline-path t)
+(delete-selection-mode 1)
 
 (setq org-list-demote-modify-bullet
       '(("+" . "-") ("-" . "+") ("*" . "+")))

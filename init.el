@@ -9,9 +9,9 @@
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
+ '(paradox-github-token t)
  '(scroll-bar-mode nil)
- '(set-mark-command-repeat-pop t)
- )
+ '(set-mark-command-repeat-pop t))
 
 
 (setq debug-on-error nil)
@@ -31,11 +31,11 @@
 ;; start size
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
-(semantic-mode 1)
-(global-linum-mode 1)
+(semantic-mode 1) 
+(global-linum-mode 1) ;; show line numbers
 (menu-bar-mode 1)
 (tool-bar-mode 0)
-(setq fill-column 80)
+(setq fill-column 120)
 (setq ns-pop-up-frames nil)
 (setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
@@ -45,11 +45,14 @@
 (setq mouse-wheel-scroll-amount '(4 ((shift) . 1))) ;; one line at a time
 (setq mouse-wheel-progressive-speed nil) ;; accelerate scrolling
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-(setq cursor-type 'bar)
+(setq-default cursor-type 'bar)
 (setq w32-pipe-read-delay 0)
 (setq python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
+(setq compilation-auto-jump-to-first-error t) 
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
 (setq desktop-save-mode t)
+(setq show-paren-mode t) ;; show matching brackets
+(delete-selection-mode 1) ;; replace selection on typing or yank
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -71,7 +74,7 @@
 ;; (use-package auctex
 ;;   :ensure t)
 
-(use-package auto-complete)
+;;(use-package auto-complete)
 ;;(ac-config-default)
 
 (use-package cmake-mode
@@ -85,13 +88,25 @@
   :diminish company-mode
   :config
   (add-hook 'after-init-hook 'global-company-mode)
+  (setq company-dabbrev-downcase 0)
+  (setq company-idle-delay 0)
+  ;;(company-quickhelp-mode 1)
   (use-package company-irony
   :ensure t
   :config
   (add-to-list 'company-backends 'company-irony))
   (use-package company-jedi
     :config
-    (add-to-list 'company-backends 'company-jedi)))
+    (add-to-list 'company-backends 'company-jedi)
+	(defun my/python-mode-hook ()
+	(add-to-list 'company-backends 'company-jedi)
+	(add-hook 'python-mode-hook 'my/python-mode-hook)
+	(add-hook 'python-mode-hook 'run-python-internal))))
+
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns))
+	(exec-path-from-shell-initialize)))
 
 (use-package flycheck
   :disabled
@@ -118,8 +133,12 @@
 	      ("C-i" . helm-execute-persistent-action)
 	      ("C-z" .  helm-select-action))
   :config
+  (setq helm-mode-fuzzy-match t)
+  (setq helm-completion-in-region-fuzzy-match t)
   (use-package helm-package)
-  (use-package helm-projectile)
+  (use-package helm-projectile
+	:config
+	(helm-projectile-on))
   (use-package helm-swoop
 	:bind ("M-i" . helm-swoop))
   (setq helm-mode 1
@@ -149,8 +168,9 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
 
- (use-package jedi
-  :ensure t)
+;; for company only company-jedi is needed
+;; (use-package jedi
+;;  :ensure t)
 
 ;; ;; Standard Jedi.el setting
 ;; ;; (add-hook 'python-mode-hook 'jedi:setup)
@@ -159,9 +179,8 @@
 
 (use-package magit
   :bind
-  ("C-x g" . magit-status)
-  :if is-win
-  :config (setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
+  ("C-x g" . magit-status))
+  
 
 (use-package markdown-mode
   :ensure t
@@ -174,6 +193,8 @@
 (use-package monokai-theme
   :config (load-theme 'monokai t))
 
+(use-package nyan-mode)
+
 (use-package org)
 
 (use-package ob-ipython
@@ -182,6 +203,8 @@
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append))
 
 (use-package ox-jira)
+
+(use-package paradox)
 
 (use-package projectile
   :diminish projectile-mode
@@ -235,13 +258,42 @@
   (progn
 	(yas-reload-all)))
 
+;; handle tab behavior. decide between yas, indent or company complete
+(defun check-expansion ()
+  (save-excursion
+	(if (looking-at "\\_>") t
+	  (backward-char 1)
+	  (if (looking-at "\\.") t
+		(backward-char 1)
+		(if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+	(yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+	  (minibuffer-complete)
+	(if (or (not yas/minor-mode)
+			(null (do-yas-expand)))
+		(if (check-expansion)
+			(company-complete-common)
+		  (indent-for-tab-command)))))
+
+(global-set-key [tab] 'tab-indent-or-complete)
+
+
+(if is-win
+	(setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
+
 
 (global-set-key (kbd "C-c e") 'fc-eval-and-replace)
 ;; (global-set-key "\C-k" 'kill-whole-line)
 
 (global-set-key (kbd "M-p") (lambda () (interactive) (scroll-down 4)))
 (global-set-key (kbd "M-n") (lambda () (interactive) (scroll-up 4)))
-
+;; (global-set-key (kbd "M-g") 'goto-line)
 
 (require 'cc-mode)
 ;;;; Auto newline state
@@ -251,13 +303,14 @@
 		  ;;(define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
 		  ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump))
 		  (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump));; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
-
+(add-hook 'c-mode-common-hook 'superword-mode)
 
 (setq-default c-default-style "stroustrup"
 	      c-basic-offset 4
 	      tab-width 4)
 
 (smart-tabs-insinuate 'c++ 'c 'javascript 'python)
+
 
 (defun yank-and-indent ()
   "Yank and then indent the newly formed region according to mode."
@@ -571,3 +624,9 @@ the line."
 ;;         (goto-char (mark t)))
 ;;       (deactivate-mark))))
 ;; (global-set-key (kbd "C-M-SPC") 'highlight-symbol-next)
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

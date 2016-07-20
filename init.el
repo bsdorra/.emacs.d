@@ -114,29 +114,36 @@
   (add-hook 'after-init-hook #'global-flycheck-mode)
   (add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
 
-;; (require 'helm-config)
+
+
 (use-package helm
-  :diminish helm-mode
-  :init
+  ;;:diminish helm-mode
+  :init 
   (require 'helm-config)
   :bind
   (("C-c h" . helm-command-prefix)
-  ("C-c h SPC" . helm-all-mark-rings)
+   ("C-c h SPC" . helm-all-mark-rings)
    ("C-c h o" . helm-occur)
    ("C-c h x" . helm-register)
    ("M-x" . helm-M-x)
    ("C-x b" . helm-mini)
    ("C-x C-f" . helm-find-files)
    ("M-y" . helm-show-kill-ring)
-  :map helm-map
-	      ("[tab]" . helm-execute-persistent-action)
-	      ("C-i" . helm-execute-persistent-action)
-	      ("C-z" .  helm-select-action))
+   :map helm-map
+   ("[tab]" . helm-execute-persistent-action)
+   ("C-i" . helm-execute-persistent-action)
+   ("C-z" .  helm-select-action))
   :config
+  (define-key helm-map [tab] 'helm-execute-persistent-action)
+  (setq helm-mode-fuzzy-match t)
+  (setq helm-completion-in-region-fuzzy-match t)
+  (use-package helm-ag
+	:init
+    (setq-default helm-follow-mode-persistent t))
   (use-package helm-package)
   (use-package helm-projectile
 	:config
-	(helm-projectile-on))
+	(helm-projectile-on)) 
   (use-package helm-swoop
 	:bind ("M-i" . helm-swoop))
   (setq helm-mode 1
@@ -151,12 +158,7 @@
 		helm-semantic-fuzzy-match t
 		helm-imenu-fuzzy-match t
 		helm-follow-mode-persistent t
-		;; helm-occur-init-source
-		;; helm-buffer-list-init-source
-		;; helm-attrset 'follow 1 helm-source-buffers-list
-		;; helm-attrset 'follow 1 helm-source-occur
 		))
-
 
 (use-package iedit)
 
@@ -165,15 +167,6 @@
   (add-hook 'c++-mode-hook 'irony-mode)
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
-
-;; for company only company-jedi is needed
-;; (use-package jedi
-;;  :ensure t)
-
-;; ;; Standard Jedi.el setting
-;; ;; (add-hook 'python-mode-hook 'jedi:setup)
-;; ;; (setq jedi:complete-on-dot t)
-
 
 (use-package magit
   :bind
@@ -238,10 +231,9 @@
 
 (use-package swoop)
 
-(use-package wgrep)
 
 (use-package which-key
-  :config
+  :init
   (setq which-key-mode t))
 
 (use-package yasnippet
@@ -272,7 +264,7 @@
 
 (defun tab-indent-or-complete ()
   (interactive)
-  (if (minibufferp)
+  (if (minibufferp)	  
 	  (minibuffer-complete)
 	(if (or (not yas/minor-mode)
 			(null (do-yas-expand)))
@@ -293,6 +285,7 @@
 (global-set-key (kbd "M-p") (lambda () (interactive) (scroll-down 4)))
 (global-set-key (kbd "M-n") (lambda () (interactive) (scroll-up 4)))
 ;; (global-set-key (kbd "M-g") 'goto-line)
+(global-set-key (kbd "C-x C-b") 'previous-buffer)
 
 (require 'cc-mode)
 ;;;; Auto newline state

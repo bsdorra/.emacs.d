@@ -25,16 +25,16 @@
 (setq is-linux (string-equal system-type "gnu/linux"))
 
 (when is-mac
-	(set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1"))
+  (set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1"))
 (when is-win
   (set-frame-font "DejaVu Sans Mono-8"))
 
 ;; start size
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
-(semantic-mode 1) 
-(global-linum-mode 1) ;; show line numbers
-(menu-bar-mode 1)
+(semantic-mode t) 
+(global-linum-mode t) ;; show line numbers
+(menu-bar-mode t)
 (tool-bar-mode 0)
 (setq fill-column 120)
 (setq ns-pop-up-frames nil)
@@ -51,8 +51,14 @@
 (setq python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
 (setq compilation-auto-jump-to-first-error t) 
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
-(setq show-paren-mode t) ;; show matching brackets
-(delete-selection-mode 1) ;; replace selection on typing or yank
+(show-paren-mode t) ;; show matching brackets
+(delete-selection-mode t) ;; replace selection on typing or yank
+(electric-pair-mode t) ;; auto closing brackets/parens
+;; make electric-pair-mode work on more brackets
+(setq electric-pair-pairs '((?\" . ?\")
+                            (?\{ . ?\})
+							(?\' . ?\')
+							))
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -80,9 +86,9 @@
 (use-package cmake-mode
   :config
   (setq auto-mode-alist
-	(append '(("CMakeLists\\.txt\\'" . cmake-mode)
-		  ("\\.cmake\\'" . cmake-mode))
-		auto-mode-alist)))
+		(append '(("CMakeLists\\.txt\\'" . cmake-mode)
+				  ("\\.cmake\\'" . cmake-mode))
+				auto-mode-alist)))
 
 (use-package company
   :diminish company-mode
@@ -92,16 +98,16 @@
   (setq company-idle-delay 0)
   (company-quickhelp-mode 1)
   (use-package company-irony
-  :ensure t
-  :config
-  (add-to-list 'company-backends 'company-irony))
+	:ensure t
+	:config
+	(add-to-list 'company-backends 'company-irony))
   (use-package company-jedi
     :config
     (add-to-list 'company-backends 'company-jedi)
 	(defun my/python-mode-hook ()
-	(add-to-list 'company-backends 'company-jedi)
-	(add-hook 'python-mode-hook 'my/python-mode-hook)
-	(add-hook 'python-mode-hook 'run-python-internal))))
+	  (add-to-list 'company-backends 'company-jedi)
+	  (add-hook 'python-mode-hook 'my/python-mode-hook)
+	  (add-hook 'python-mode-hook 'run-python-internal))))
 
 (use-package exec-path-from-shell
   :config
@@ -146,8 +152,8 @@
 	(helm-projectile-on)) 
   (use-package helm-swoop
 	:bind ("M-i" . helm-swoop))
-  (setq helm-mode 1
-		helm-split-window-in-side-p nil
+  (helm-mode 1)
+  (setq helm-split-window-in-side-p nil
 		helm-move-to-line-cycle-in-source t
 		helm-ff-search-library-in-sexp t
 		helm-scroll-amount 4
@@ -171,7 +177,7 @@
 (use-package magit
   :bind
   ("C-x g" . magit-status))
-  
+
 
 (use-package markdown-mode
   :ensure t
@@ -210,7 +216,7 @@
   (setq projectile-keymap-prefix (kbd "C-c p"))
   :config
   (projectile-mode t)
-  (projectile-global-mode)
+  (projectile-global-mode t)
   (setq projectile-completion-system 'helm
 		projectile-indexing-method 'alien
 		))
@@ -298,8 +304,8 @@
 (add-hook 'c-mode-common-hook 'superword-mode)
 
 (setq-default c-default-style "stroustrup"
-	      c-basic-offset 4
-	      tab-width 4)
+			  c-basic-offset 4
+			  tab-width 4)
 
 (smart-tabs-insinuate 'c++ 'c 'javascript 'python)
 
@@ -313,11 +319,11 @@
 (global-set-key "\C-y" 'yank-and-indent)
 
 (add-hook 'text-mode-hook
-	  (lambda ()
-	    ;; lines are still defined by line-breaks, not display
-	    (visual-line-mode 1)
-	    (setq line-move-visual t)
-	    ))
+		  (lambda ()
+			;; lines are still defined by line-breaks, not display
+			(visual-line-mode 1)
+			(setq line-move-visual t)
+			))
 
 (add-to-list 'auto-mode-alist '("\\.fx\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.inl\\'" . c++-mode))
@@ -364,26 +370,26 @@ the line."
   (interactive)
   (if (= (count-windows) 2)
       (let* ((this-win-buffer (window-buffer))
-	     (next-win-buffer (window-buffer (next-window)))
-	     (this-win-edges (window-edges (selected-window)))
-	     (next-win-edges (window-edges (next-window)))
-	     (this-win-2nd (not (and (<= (car this-win-edges)
-					 (car next-win-edges))
-				     (<= (cadr this-win-edges)
-					 (cadr next-win-edges)))))
-	     (splitter
-	      (if (= (car this-win-edges)
-		     (car (window-edges (next-window))))
-		  'split-window-horizontally
-		'split-window-vertically)))
-	(delete-other-windows)
-	(let ((first-win (selected-window)))
-	  (funcall splitter)
-	  (if this-win-2nd (other-window 1))
-	  (set-window-buffer (selected-window) this-win-buffer)
-	  (set-window-buffer (next-window) next-win-buffer)
-	  (select-window first-win)
-	  (if this-win-2nd (other-window 1))))))
+			 (next-win-buffer (window-buffer (next-window)))
+			 (this-win-edges (window-edges (selected-window)))
+			 (next-win-edges (window-edges (next-window)))
+			 (this-win-2nd (not (and (<= (car this-win-edges)
+										 (car next-win-edges))
+									 (<= (cadr this-win-edges)
+										 (cadr next-win-edges)))))
+			 (splitter
+			  (if (= (car this-win-edges)
+					 (car (window-edges (next-window))))
+				  'split-window-horizontally
+				'split-window-vertically)))
+		(delete-other-windows)
+		(let ((first-win (selected-window)))
+		  (funcall splitter)
+		  (if this-win-2nd (other-window 1))
+		  (set-window-buffer (selected-window) this-win-buffer)
+		  (set-window-buffer (next-window) next-win-buffer)
+		  (select-window first-win)
+		  (if this-win-2nd (other-window 1))))))
 (global-set-key (kbd "C-x |") 'toggle-window-split)
 
 
@@ -400,20 +406,20 @@ the line."
 
 (defun buffer-menu-custom-font-lock  ()
   (let ((font-lock-unfontify-region-function
-	 (lambda (start end)
-	   (remove-text-properties start end '(font-lock-face nil)))))
+		 (lambda (start end)
+		   (remove-text-properties start end '(font-lock-face nil)))))
     (font-lock-unfontify-buffer)
     (set (make-local-variable 'font-lock-defaults)
-	 '(buffer-menu-buffer-font-lock-keywords t))
+		 '(buffer-menu-buffer-font-lock-keywords t))
     (font-lock-fontify-buffer)))
 (add-hook 'buffer-menu-mode-hook 'buffer-menu-custom-font-lock)
 
 
 ;; End incremental searches at the beginning of the search
 (add-hook 'isearch-mode-end-hook 'my-goto-match-beginning)
- (defun my-goto-match-beginning ()
-      (when (and isearch-forward (not isearch-mode-end-hook-quit))
-        (goto-char isearch-other-end)))
+(defun my-goto-match-beginning ()
+  (when (and isearch-forward (not isearch-mode-end-hook-quit))
+	(goto-char isearch-other-end)))
 (defadvice isearch-exit (after my-goto-match-beginning activate)
   "Go to beginning of match."
   (when isearch-forward (goto-char isearch-other-end)))
@@ -425,15 +431,15 @@ the line."
 (setq org-agenda-files (list org-agenda-directory));;(directory-files (expand-file-name org-agenda-directory) t "^[^\.][^#][[:alnum:]]+\.org$"))
 
 (define-key global-map "\C-cs"
-        (lambda () (interactive) (org-capture nil "s")))
+  (lambda () (interactive) (org-capture nil "s")))
 (define-key global-map "\C-cd"
-        (lambda () (interactive) (org-capture nil "d")))
+  (lambda () (interactive) (org-capture nil "d")))
 (define-key global-map "\C-ct"
-        (lambda () (interactive) (org-capture nil "t")))
+  (lambda () (interactive) (org-capture nil "t")))
 (define-key global-map "\C-cn"
-        (lambda () (interactive) (org-capture nil "n")))
+  (lambda () (interactive) (org-capture nil "n")))
 (define-key global-map "\C-cj"
-        (lambda () (interactive) (org-capture nil "j")))
+  (lambda () (interactive) (org-capture nil "j")))
 
 (global-set-key "\C-cl" 'org-store-link)
 (global-set-key "\C-ca" 'org-agenda)
@@ -458,27 +464,27 @@ the line."
 
 (setq org-capture-templates
       '(("t" "Task" entry (file+headline org-default-notes-file "Inbox")
-	 "* TODO %?\n")
-	("j" "Journal" entry(file+datetree org-default-journal-file)
-	 "* %?\n%T")	 ;; "* [%<%R>] %?\n")
-	("s" "Scheduled Task" entry (file+headline org-default-notes-file "Inbox")
-	 "* SCHEDULED: %?\n%^t\n")
-	("d" "Done Task" entry (file+headline org-default-notes-file "Inbox")
-	 "* DONE %?\nCLOSED: %U\n")
-	("n" "Next Task" entry (file+headline org-default-notes-file "Inbox")
-	 "* NEXT %?\n")
-	("w" "Wait Task" entry (file+headline org-default-notes-file "Inbox")
-	 "* WAIT %?\n")))
+		 "* TODO %?\n")
+		("j" "Journal" entry(file+datetree org-default-journal-file)
+		 "* %?\n%T")	 ;; "* [%<%R>] %?\n")
+		("s" "Scheduled Task" entry (file+headline org-default-notes-file "Inbox")
+		 "* SCHEDULED: %?\n%^t\n")
+		("d" "Done Task" entry (file+headline org-default-notes-file "Inbox")
+		 "* DONE %?\nCLOSED: %U\n")
+		("n" "Next Task" entry (file+headline org-default-notes-file "Inbox")
+		 "* NEXT %?\n")
+		("w" "Wait Task" entry (file+headline org-default-notes-file "Inbox")
+		 "* WAIT %?\n")))
 
 (setq org-todo-keyword-faces
       '(("TODO" . org-warning)
-	("NEXT" . "yellow")
-	("MAYBE" . "orange")
-	("DONE" . "green")
-	("WAITING". "cyan")
-	("DELEGATED". "blue")
-	("WAIT". "orange")
-	("CANCELED" . (:foreground "magenta" :weight bold))))
+		("NEXT" . "yellow")
+		("MAYBE" . "orange")
+		("DONE" . "green")
+		("WAITING". "cyan")
+		("DELEGATED". "blue")
+		("WAIT". "orange")
+		("CANCELED" . (:foreground "magenta" :weight bold))))
 
 ;; Place tags close to the right-hand side of the window
 (add-hook 'org-finalize-agenda-hook 'place-agenda-tags)

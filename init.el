@@ -1,4 +1,3 @@
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -20,9 +19,9 @@
 (load "server")
 (unless (server-running-p) (server-start))
 
-(setq is-mac (equal system-type 'darwin))
-(setq is-win (equal system-type 'windows-nt))
-(setq is-linux (string-equal system-type "gnu/linux"))
+(defvar is-mac (equal system-type 'darwin))
+(defvar is-win (equal system-type 'windows-nt))
+(defvar is-linux (string-equal system-type "gnu/linux"))
 
 (when is-mac
   (set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1"))
@@ -37,7 +36,7 @@
 (menu-bar-mode t)
 (tool-bar-mode 0)
 (setq fill-column 120)
-(setq ns-pop-up-frames nil)
+;;(setq ns-pop-up-frames nil)
 (setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
 (setq scroll-step 1)
@@ -48,15 +47,15 @@
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 (setq-default cursor-type 'bar)
 (setq w32-pipe-read-delay 0)
-(setq python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
-(setq compilation-auto-jump-to-first-error t) 
+(defvar python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
+(defvar compilation-auto-jump-to-first-error t) 
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
 (setq desktop-save-mode t)
 (show-paren-mode t) ;; show matching brackets
 (delete-selection-mode t) ;; replace selection on typing or yank
 (electric-pair-mode t) ;; auto closing brackets/parens
 ;; make electric-pair-mode work on more brackets
-(setq electric-pair-pairs '((?\" . ?\")
+(defvar electric-pair-pairs '((?\" . ?\")
                             (?\{ . ?\})
 							(?\' . ?\')
 							))
@@ -76,6 +75,7 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(require 'use-package)
 (setq use-package-always-ensure t)
 
 ;; (use-package auctex
@@ -98,9 +98,11 @@
   :diminish company-mode
   :config
   (add-hook 'after-init-hook 'global-company-mode)
-  (setq company-dabbrev-downcase 0)
+  ;; (setq company-dabbrev-downcase 0)
   (setq company-idle-delay 0)
-  ;;(company-quickhelp-mode 1)
+  ;; (setq company-quickhelp-mode t)
+  (define-key company-mode-map [tab] 'company-complete-common-or-cycle)
+  (define-key company-active-map [tab] 'company-complete-common-or-cycle) 
   (use-package company-irony
 	:ensure t
 	:config
@@ -119,10 +121,11 @@
 	(exec-path-from-shell-initialize)))
 
 (use-package flycheck
-  :disabled
+  ;; :disabled  
   :config
-  (add-hook 'after-init-hook #'global-flycheck-mode)
-  (add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+  (add-hook 'after-init-hook #'global-flycheck-mode))
+  ;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+ 
 
 (use-package helm-ag
   :init
@@ -142,7 +145,7 @@
    ("C-x C-f" . helm-find-files)
    ("M-y" . helm-show-kill-ring)
    :map helm-map
-   ("[tab]" . helm-execute-persistent-action)
+   ;; ("[tab]" . helm-execute-persistent-action)
    ("C-i" . helm-execute-persistent-action)
    ("C-z" .  helm-select-action))
   :config
@@ -225,9 +228,9 @@
 			  (setq indent-tabs-mode t)
 			  (setq py-indent-tabs-mode t)
 			  (setq tab-width 4)
-			  (setq python-indent 4)
-			  )))
+			  (setq python-indent 4))))
 
+(use-package smart-tab)
 
 (use-package smart-tabs-mode
   :config
@@ -243,7 +246,7 @@
 
 (use-package which-key
   :init
-  (setq which-key-mode t))
+  (which-key-mode))
 
 (use-package yasnippet
   ;; :disabled
@@ -258,35 +261,34 @@
   (progn
 	(yas-reload-all)))
 
-;; handle tab behavior. decide between yas, indent or company complete
-(defun check-expansion ()
-  (save-excursion
-	(if (looking-at "\\_>") t
-	  (backward-char 1)
-	  (if (looking-at "\\.") t
-		(backward-char 1)
-		(if (looking-at "->") t nil)))))
+;; ;; handle tab behavior. decide between yas, indent or company complete
+;; (defun check-expansion ()
+;;   (save-excursion
+;; 	(if (looking-at "\\_>") t
+;; 	  (backward-char 1)
+;; 	  (if (looking-at "\\.") t
+;; 		(backward-char 1)
+;; 		(if (looking-at "->") t nil)))))
 
-(defun do-yas-expand ()
-  (let ((yas/fallback-behavior 'return-nil))
-	(yas/expand)))
+;; (defun do-yas-expand ()
+;;   (let ((yas/fallback-behavior 'return-nil))
+;; 	(yas/expand)))
 
-(defun tab-indent-or-complete ()
-  (interactive)
-  (if (minibufferp)	  
-	  (minibuffer-complete)
-	(if (or (not yas/minor-mode)
-			(null (do-yas-expand)))
-		(if (check-expansion)
-			(company-complete-common)
-		  (indent-for-tab-command)))))
+;; (defun tab-indent-or-complete ()
+;;   (interactive)
+;;   (if (minibufferp)	  
+;; 	  (minibuffer-complete)
+;; 	(if (or (not yas/minor-mode)
+;; 			(null (do-yas-expand)))
+;; 		(if (check-expansion)
+;; 			(company-complete-common)
+;; 		  (indent-for-tab-command)))))
 
-(global-set-key [tab] 'tab-indent-or-complete)
+;; (global-set-key [tab] 'tab-indent-or-complete)
 
 
 (if is-win
 	(setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
-
 
 (global-set-key (kbd "C-c e") 'fc-eval-and-replace)
 ;; (global-set-key "\C-k" 'kill-whole-line)
@@ -339,6 +341,8 @@
 (add-to-list 'auto-mode-alist '("\\.hxx\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
+
+(global-set-key (kbd "<f8>") 'recompile)
 
 (defun config () (interactive) (find-file "~/.emacs.d/init.el"))
 (global-set-key (kbd "<f10>") 'config)

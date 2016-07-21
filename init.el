@@ -178,9 +178,9 @@
   (add-hook 'objc-mode-hook 'irony-mode))
 
 (use-package magit
-  :bind
-  ("C-x g" . magit-status))
-
+  :bind (("C-x g" . magit-status)
+		 :map magit-mode-map
+		 ([tab] . magit-section-toggle)))
 
 (use-package markdown-mode
   :ensure t

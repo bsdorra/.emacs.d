@@ -1,5 +1,3 @@
-# My Humble Emacs Config
-
 I recently update to the use of "use-package" for package
 dependencies. Default behavior is set to :ensure, so all dependencies
 will be downloaded automatically on the first start.

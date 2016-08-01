@@ -101,7 +101,7 @@
   ;; (setq company-dabbrev-downcase 0)
   (setq company-idle-delay 0)
   ;; (setq company-quickhelp-mode t)
-  (define-key company-mode-map [tab] 'company-complete-common-or-cycle)
+  ;;(define-key company-mode-map [tab] 'company-complete-common-or-cycle)
   (define-key company-active-map [tab] 'company-complete-common-or-cycle) 
   (use-package company-irony
 	:ensure t
@@ -121,11 +121,11 @@
 	(exec-path-from-shell-initialize)))
 
 (use-package flycheck
-  ;; :disabled  
+  :disabled  
   :config
   (add-hook 'after-init-hook #'global-flycheck-mode))
-  ;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
- 
+;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+
 
 (use-package helm-ag
   :init
@@ -181,9 +181,12 @@
   (add-hook 'objc-mode-hook 'irony-mode))
 
 (use-package magit
-  :bind (("C-x g" . magit-status)
-		 :map magit-mode-map
-		 ([tab] . magit-section-toggle)))
+  :bind ("C-x g" . magit-status))
+  
+
+
+;; :map magit-mode-map
+;; 	 ([tab] . magit-section-toggle)))
 
 (use-package markdown-mode
   :ensure t
@@ -230,7 +233,8 @@
 			  (setq tab-width 4)
 			  (setq python-indent 4))))
 
-(use-package smart-tab)
+(use-package smart-tab
+  :config(smart-tab-mode))
 
 (use-package smart-tabs-mode
   :config

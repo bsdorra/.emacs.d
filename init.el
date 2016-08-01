@@ -24,7 +24,8 @@
 (defvar is-linux (string-equal system-type "gnu/linux"))
 
 (when is-mac
-  (set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1"))
+  (set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1")
+  (setq mac-command-modifier 'meta)) ;; set cmd key to alt
 (when is-win
   (set-frame-font "DejaVu Sans Mono-8"))
 
@@ -36,7 +37,7 @@
 (menu-bar-mode t)
 (tool-bar-mode 0)
 (setq fill-column 120)
-;;(setq ns-pop-up-frames nil)
+(setq ns-pop-up-frames nil) ;; no new frame for file opened from finder
 (setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
 (setq scroll-step 1)
@@ -48,7 +49,7 @@
 (setq-default cursor-type 'bar)
 (setq w32-pipe-read-delay 0)
 (defvar python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
-(defvar compilation-auto-jump-to-first-error t) 
+;; (defvar compilation-auto-jump-to-first-error t) 
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
 (setq desktop-save-mode t)
 (show-paren-mode t) ;; show matching brackets
@@ -81,11 +82,8 @@
 ;; (use-package auctex
 ;;   :ensure t)
 
-;;(use-package auto-complete)
-;;(ac-config-default)
-
 (use-package auto-highlight-symbol
-  :config (auto-highlight-symbol-mode))
+  :init (auto-highlight-symbol-mode))
 
 (use-package cmake-mode
   :config
@@ -98,7 +96,7 @@
   :diminish company-mode
   :config
   (add-hook 'after-init-hook 'global-company-mode)
-  ;; (setq company-dabbrev-downcase 0)
+  (setq company-dabbrev-downcase 0)
   (setq company-idle-delay 0)
   ;; (setq company-quickhelp-mode t)
   ;;(define-key company-mode-map [tab] 'company-complete-common-or-cycle)
@@ -123,9 +121,10 @@
 (use-package flycheck
   :disabled  
   :config
-  (add-hook 'after-init-hook #'global-flycheck-mode))
-;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
-
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  (add-hook 'c++-mode-hook (lambda () (setq flycheck-clang-language-standard "c++14")))
+  (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++14"))))
+  ;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
 
 (use-package helm-ag
   :init
@@ -372,7 +371,7 @@ the line."
     (comment-dwim arg)))
 
 (if is-mac
-    (global-set-key (kbd "s-/") 'comment-dwim-line)
+    ;; (global-set-key (kbd "s-/") 'comment-dwim-line)
   (global-set-key (kbd "C-/") 'comment-dwim-line))
 
 

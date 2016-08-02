@@ -94,9 +94,10 @@
 
 (use-package company
   :diminish company-mode
+  :init (company-mode)
   :config
   (add-hook 'after-init-hook 'global-company-mode)
-  (setq company-dabbrev-downcase 0)
+  (setq company-dabbrev-downcase nil)
   (setq company-idle-delay 0)
   ;; (setq company-quickhelp-mode t)
   ;;(define-key company-mode-map [tab] 'company-complete-common-or-cycle)
@@ -119,7 +120,7 @@
 	(exec-path-from-shell-initialize)))
 
 (use-package flycheck
-  ;; :disabled  
+  :disabled  
   :config
   (add-hook 'after-init-hook #'global-flycheck-mode)
   (add-hook 'c++-mode-hook (lambda () (setq flycheck-clang-language-standard "c++14")))
@@ -231,7 +232,8 @@
 			  (setq python-indent 4))))
 
 (use-package smart-tab
-  :init(smart-tab-mode))
+  ;; :init(smart-tab-mode)
+  :config(smart-tab-mode))
 
 (use-package smart-tabs-mode
   :config
@@ -303,9 +305,8 @@
 ;;;; Auto newline state
 ;; (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
 ;; A single <DEL> deletes all preceding whitespace
-(add-hook 'c-mode-common-hook '(lambda () (c-toggle-hungry-state 1))
-		  ;;(define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
-		  ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump))
+(add-hook 'c-mode-common-hook ;;'(lambda () (c-toggle-hungry-state 1))
+		  (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
 		  (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump));; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
 (add-hook 'c-mode-common-hook 'superword-mode)
 

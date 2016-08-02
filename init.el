@@ -126,7 +126,6 @@
   (add-hook 'c++-mode-hook (lambda () (setq flycheck-clang-language-standard "c++14")))
   (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++14"))))
   ;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
- 
 
 (use-package helm-ag
   :init
@@ -182,9 +181,12 @@
   (add-hook 'objc-mode-hook 'irony-mode))
 
 (use-package magit
-  :bind (("C-x g" . magit-status)
-		 :map magit-mode-map
-		 ([tab] . magit-section-toggle)))
+  :bind ("C-x g" . magit-status))
+  
+
+
+;; :map magit-mode-map
+;; 	 ([tab] . magit-section-toggle)))
 
 (use-package markdown-mode
   :ensure t
@@ -232,7 +234,6 @@
 			  (setq python-indent 4))))
 
 (use-package smart-tab
-  ;; :init(smart-tab-mode)
   :config(smart-tab-mode))
 
 (use-package smart-tabs-mode

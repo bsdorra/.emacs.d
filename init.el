@@ -303,13 +303,15 @@
 (global-set-key (kbd "C-x C-b") 'previous-buffer)
 
 (require 'cc-mode)
-;;;; Auto newline state
-;; (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
-;; A single <DEL> deletes all preceding whitespace
-(add-hook 'c-mode-common-hook ;;'(lambda () (c-toggle-hungry-state 1))
-		  (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
-		  (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump));; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
-(add-hook 'c-mode-common-hook 'superword-mode)
+
+
+(add-hook 'c-mode-common-hook '(lambda ()
+				 ;;(c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
+				 (c-toggle-auto-state 1) ;; Auto newline state
+				 (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
+				 (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
+				 (superword-mode)))
+;; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
 
 (setq-default c-default-style "stroustrup"
 			  c-basic-offset 4

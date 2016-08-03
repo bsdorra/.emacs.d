@@ -83,6 +83,7 @@
 ;;   :ensure t)
 
 (use-package auto-highlight-symbol
+  :disabled
   :init (auto-highlight-symbol-mode))
 
 (use-package cmake-mode
@@ -117,6 +118,11 @@
   :config
   (when (memq window-system '(mac ns))
 	(exec-path-from-shell-initialize)))
+
+(use-package expand-region
+  :config
+  (global-set-key (kbd "C-.") 'er/expand-region)
+  (global-set-key (kbd "C-,") 'er/contract-region))
 
 (use-package flycheck
   :disabled  
@@ -182,8 +188,6 @@
 (use-package magit
   :bind ("C-x g" . magit-status))
   
-
-
 ;; :map magit-mode-map
 ;; 	 ([tab] . magit-section-toggle)))
 
@@ -197,6 +201,13 @@
 
 (use-package monokai-theme
   :config (load-theme 'monokai t))
+
+(use-package multiple-cursors
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c C->") 'mc/mark-all-like-this))
 
 (use-package nyan-mode)
 

@@ -1,0 +1,6 @@
+elpa/
+semanticdb/
+.python-environments/
+*.*~
+irony
+projectile*

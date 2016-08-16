@@ -234,7 +234,7 @@
 			  (setq python-indent 4))))
 
 (use-package smart-tab
-  :config(smart-tab-mode))
+  :config(global-smart-tab-mode))
 
 (use-package smart-tabs-mode
   :config
@@ -307,11 +307,10 @@
 
 (add-hook 'c-mode-common-hook '(lambda ()
 				 ;;(c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
-				 (c-toggle-auto-state 1) ;; Auto newline state
+				 ;;(c-toggle-auto-state 1) ;; Auto newline state
 				 (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
 				 (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
 				 (superword-mode)))
-;; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
 
 (setq-default c-default-style "stroustrup"
 			  c-basic-offset 4

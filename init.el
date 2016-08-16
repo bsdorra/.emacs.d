@@ -27,7 +27,8 @@
   (set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1")
   (setq mac-command-modifier 'meta)) ;; set cmd key to alt
 (when is-win
-  (set-frame-font "DejaVu Sans Mono-8"))
+   (set-frame-font "DejaVu Sans Mono-8" nil t))
+  ;;(set-frame-font "Lucida Sans Unicode-10" nil t))
 
 ;; start size
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -49,11 +50,15 @@
 (setq-default cursor-type 'bar)
 (setq w32-pipe-read-delay 0)
 (defvar python-shell-prompt-detect-failure-warning nil) ;; hack, gets rid of weird warning message on file load
-;; (defvar compilation-auto-jump-to-first-error t) 
+;; (defvar compilation-auto-jump-to-first-error t)
+(setq compilation-scroll-output t)
 (defalias 'yes-or-no-p 'y-or-n-p) ;; confirm with y instead of yes<ret>
 (setq desktop-save-mode t)
 (show-paren-mode t) ;; show matching brackets
 (delete-selection-mode t) ;; replace selection on typing or yank
+
+(setq gdb-many-windows t) ;; use gdb-many-windows by default
+;; (setq gdb-show-main t) ;; Non-nil means display source file containing the main routine at startup
 (electric-pair-mode t) ;; auto closing brackets/parens
 ;; make electric-pair-mode work on more brackets
 (defvar electric-pair-pairs '((?\" . ?\")
@@ -100,6 +105,15 @@
   (add-hook 'after-init-hook 'global-company-mode)
   (setq company-dabbrev-downcase nil)
   (setq company-idle-delay 0)
+  ;; replace the `completion-at-point' and `complete-symbol' bindings in
+  ;; irony-mode's buffers by irony-mode's function
+  (defun my-irony-mode-hook ()
+	(define-key irony-mode-map [remap completion-at-point]
+	  'irony-completion-at-point-async)
+	(define-key irony-mode-map [remap complete-symbol]
+	  'irony-completion-at-point-async))
+  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
   ;; (setq company-quickhelp-mode t)
   ;;(define-key company-mode-map [tab] 'company-complete-common-or-cycle)
   (define-key company-active-map [tab] 'company-complete-common-or-cycle) 
@@ -245,7 +259,7 @@
 			  (setq python-indent 4))))
 
 (use-package smart-tab
-  :config(smart-tab-mode))
+  :init(global-smart-tab-mode))
 
 (use-package smart-tabs-mode
   :config
@@ -365,7 +379,7 @@
 
 (defun reload-config ()
   "reload your .emacs file without restarting Emacs"
-  (interactive)
+  (interactive)							
   (load-file "~/.emacs.d/init.el"))
 (global-set-key (kbd "<f9>") 'reload-config)
 
@@ -383,9 +397,9 @@ the line."
       (comment-or-uncomment-region (line-beginning-position) (line-end-position))
     (comment-dwim arg)))
 
-(if is-mac
-    ;; (global-set-key (kbd "s-/") 'comment-dwim-line)
-  (global-set-key (kbd "C-/") 'comment-dwim-line))
+
+;; (global-set-key (kbd "s-/") 'comment-dwim-line)
+(global-set-key (kbd "M-;") 'comment-dwim-line) 
 
 
 
@@ -518,6 +532,24 @@ the line."
   (org-agenda-align-tags))
 
 
+
+(defun unpop-to-mark-command ()
+  "Unpop off mark ring into the buffer's actual mark.
+Does not set point.  Does nothing if mark ring is empty."
+  (interactive)
+  (let ((num-times (if (equal last-command 'pop-to-mark-command) 2
+                     (if (equal last-command 'unpop-to-mark-command) 1
+                       (error "Previous command was not a (un)pop-to-mark-command")))))
+    (dotimes (x num-times)
+      (when mark-ring
+        (setq mark-ring (cons (copy-marker (mark-marker)) mark-ring))
+        (set-marker (mark-marker) (+ 0 (car (last mark-ring))) (current-buffer))
+        (when (null (mark t)) (ding))
+        (setq mark-ring (nbutlast mark-ring))
+        (goto-char (mark t)))
+      (deactivate-mark))))
+
+
 ;; (defvar org-journal-file (concat org-dir "journal.org")
 ;;   "Path to OrgMode journal file.")
 ;; (defvar org-journal-date-format "%Y-%m-%d"
@@ -629,21 +661,7 @@ the line."
 ;; ;; (define-key global-map [up] 'increment-number-at-point)
 ;; ;; (define-key global-map [down] 'decrement-number-at-point)
 
-;; (defun unpop-to-mark-command ()
-;;   "Unpop off mark ring into the buffer's actual mark.
-;; Does not set point.  Does nothing if mark ring is empty."
-;;   (interactive)
-;;   (let ((num-times (if (equal last-command 'pop-to-mark-command) 2
-;;                      (if (equal last-command 'unpop-to-mark-command) 1
-;;                        (error "Previous command was not a (un)pop-to-mark-command")))))
-;;     (dotimes (x num-times)
-;;       (when mark-ring
-;;         (setq mark-ring (cons (copy-marker (mark-marker)) mark-ring))
-;;         (set-marker (mark-marker) (+ 0 (car (last mark-ring))) (current-buffer))
-;;         (when (null (mark t)) (ding))
-;;         (setq mark-ring (nbutlast mark-ring))
-;;         (goto-char (mark t)))
-;;       (deactivate-mark))))
+
 ;; (global-set-key (kbd "C-M-SPC") 'highlight-symbol-next)
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

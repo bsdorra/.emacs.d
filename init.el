@@ -44,7 +44,7 @@
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
 (setq auto-window-vscroll nil)
-(setq mouse-wheel-scroll-amount '(4 ((shift) . 1))) ;; one line at a time
+(setq mouse-wheel-scroll-amount '(2 ((shift) . 1))) ;; one line at a time
 (setq mouse-wheel-progressive-speed nil) ;; accelerate scrolling
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 (setq-default cursor-type 'bar)
@@ -56,7 +56,7 @@
 (setq desktop-save-mode t)
 (show-paren-mode t) ;; show matching brackets
 (delete-selection-mode t) ;; replace selection on typing or yank
-
+(setq ring-bell-function 'ignore)
 (setq gdb-many-windows t) ;; use gdb-many-windows by default
 ;; (setq gdb-show-main t) ;; Non-nil means display source file containing the main routine at startup
 (electric-pair-mode t) ;; auto closing brackets/parens

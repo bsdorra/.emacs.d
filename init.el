@@ -9,6 +9,9 @@
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
+ '(org-agenda-files
+   (quote
+	("e:/docs/thoughts_on_productivity.org" "z:/org/gtd.org" "z:/org/journal.org")))
  '(paradox-github-token t)
  '(scroll-bar-mode nil)
  '(set-mark-command-repeat-pop t))
@@ -27,7 +30,7 @@
   (set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1")
   (setq mac-command-modifier 'meta)) ;; set cmd key to alt
 (when is-win
-   (set-frame-font "DejaVu Sans Mono-8" nil t))
+  (set-frame-font "DejaVu Sans Mono-8" nil t))
   ;;(set-frame-font "Lucida Sans Unicode-10" nil t))
 
 ;; start size
@@ -35,9 +38,9 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
 (semantic-mode t) 
 (global-linum-mode t) ;; show line numbers
-(menu-bar-mode t)
+(menu-bar-mode 0)
 (tool-bar-mode 0)
-(setq fill-column 120)
+(setq fill-column 100)
 (setq ns-pop-up-frames nil) ;; no new frame for file opened from finder
 (setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
@@ -56,22 +59,24 @@
 (setq desktop-save-mode t)
 (show-paren-mode t) ;; show matching brackets
 (delete-selection-mode t) ;; replace selection on typing or yank
-
+(global-auto-revert-mode) ;; auto update buffer changed on disk
 (setq gdb-many-windows t) ;; use gdb-many-windows by default
 ;; (setq gdb-show-main t) ;; Non-nil means display source file containing the main routine at startup
 (electric-pair-mode t) ;; auto closing brackets/parens
 ;; make electric-pair-mode work on more brackets
 (defvar electric-pair-pairs '((?\" . ?\")
-                            (?\{ . ?\})
-							(?\' . ?\')
-							))
+			      (?\{ . ?\})
+			      (?\' . ?\')
+			      ))
+
+
 
 (require 'package)
 (setq package-enable-at-startup nil)
-;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
-(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-;; (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("marmalade" . "https://marmalade-repo.org/packages/")
+                         ("melpa" . "https://melpa.org/packages/")
+						 ))
 (package-initialize)
 
 ;; Bootstrap 'use-package'
@@ -120,12 +125,14 @@
 	:config
 	(add-to-list 'company-backends 'company-irony))
   (use-package company-jedi
+	;;:disabled
     :config
     (add-to-list 'company-backends 'company-jedi)
 	(defun my/python-mode-hook ()
-	  (add-to-list 'company-backends 'company-jedi)
-	  (add-hook 'python-mode-hook 'my/python-mode-hook)
-	  (add-hook 'python-mode-hook 'run-python-internal))))
+	  (add-to-list 'company-backends 'company-jedi)	  
+	  ;(add-hook 'python-mode-hook 'run-python-internal)
+	  )
+	(add-hook 'python-mode-hook 'my/python-mode-hook)))
 
 (use-package exec-path-from-shell
   :config
@@ -145,10 +152,6 @@
   (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++14"))))
   ;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
 
-(use-package helm-ag
-  :init
-  (setq-default helm-follow-mode-persistent t))
-
 (use-package helm
   ;;:diminish helm-mode
   :init 
@@ -163,19 +166,27 @@
    ("C-x C-f" . helm-find-files)
    ("M-y" . helm-show-kill-ring)
    :map helm-map
-   ;; ("[tab]" . helm-execute-persistent-action)
    ("C-i" . helm-execute-persistent-action)
    ("C-z" .  helm-select-action))
   :config
   (define-key helm-map [tab] 'helm-execute-persistent-action)
+  (setq helm-follow-mode-persistent t)
   (setq helm-mode-fuzzy-match t)
-  (setq helm-completion-in-region-fuzzy-match t) 
+  (setq helm-completion-in-region-fuzzy-match t)
   (use-package helm-package)
-  (use-package helm-projectile
+  (use-package helm-projectile)
+  (use-package helm-gtags
+	:init
+	(setq helm-gtags-auto-update t)
+	(setq helm-gtags-suggested-key-mapping t)
+	;(setq helm-gtags-ignore-case t)
+	(setq helm-gtags-auto-update t)
+	;; (setq helm-gtags-prefix-key "\C-t")
 	:config
-	(helm-projectile-on)) 
-  (use-package helm-swoop
-	:bind ("M-i" . helm-swoop))
+	(add-hook 'c-mode-hook 'helm-gtags-mode)
+	(add-hook 'c++-mode-hook 'helm-gtags-mode)
+	(add-hook 'python-mode-hook 'helm-gtags-mode)
+	(add-hook 'javascript-mode-hook 'helm-gtags-mode))
   (helm-mode 1)
   (setq helm-split-window-in-side-p nil
 		helm-move-to-line-cycle-in-source t
@@ -190,9 +201,17 @@
 		helm-follow-mode-persistent t
 		))
 
+(use-package helm-ag
+  :init
+  (setq-default helm-follow-mode-persistent t))
+
+(use-package helm-swoop
+  :bind ("M-i" . helm-swoop))
+
 (use-package iedit)
 
 (use-package irony
+  :disabled
   :config
   (add-hook 'c++-mode-hook 'irony-mode)
   (add-hook 'c-mode-hook 'irony-mode)
@@ -224,7 +243,15 @@
 
 (use-package nyan-mode)
 
-(use-package org)
+(use-package org
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((octave . t)
+	 (sh . t)
+	 (python . t)
+	 (emacs-lisp . t)   
+	 )))
 
 (use-package ob-ipython
   :config
@@ -246,8 +273,12 @@
 		projectile-indexing-method 'alien
 		))
 
+(use-package pug-mode
+  :config (setq tab-width 2)
+  :mode ("\\.pug\\'" . pug-mode))
+
 (use-package python-mode
-  ;; :disabled								
+  :disabled								
   :config
   (add-hook 'python-mode-hook
 			(lambda ()			
@@ -263,7 +294,17 @@
   :config
   (smart-tabs-advice py-indent-line py-indent-offset)
   (smart-tabs-advice py-newline-and-indent py-indent-offset)
-  (smart-tabs-advice py-indent-region py-indent-offset))
+  (smart-tabs-advice py-indent-region py-indent-offset)
+  (smart-tabs-advice python-indent-line-1 python-indent)
+  (add-hook 'python-mode-hook
+			(lambda ()
+			  (setq indent-tabs-mode t)
+			  (setq indent-tabs-mode t)
+			  (setq py-indent-tabs-mode t)
+			  (setq tab-width 4)
+			  (setq python-indent 4)
+			  (setq tab-width (default-value 'tab-width)))))
+
 
 (use-package swoop)
 
@@ -330,10 +371,11 @@
 
 (add-hook 'c-mode-common-hook '(lambda ()
 				 ;;(c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
-				 ;;(c-toggle-auto-state 1) ;; Auto newline state
+				 ;; (c-toggle-auto-state 1) ;; Auto newline state
 				 (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
 				 (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
 				 (superword-mode)))
+;; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
 
 (setq-default c-default-style "stroustrup"
 			  c-basic-offset 4
@@ -368,6 +410,7 @@
 (add-to-list 'auto-mode-alist '("\\.hxx\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
 (global-set-key (kbd "<f8>") 'recompile)
 
@@ -464,17 +507,6 @@ the line."
 (setq org-agenda-directory "~/org/")
 (setq org-agenda-files (list org-agenda-directory));;(directory-files (expand-file-name org-agenda-directory) t "^[^\.][^#][[:alnum:]]+\.org$"))
 
-(define-key global-map "\C-cs"
-  (lambda () (interactive) (org-capture nil "s")))
-(define-key global-map "\C-cd"
-  (lambda () (interactive) (org-capture nil "d")))
-(define-key global-map "\C-ct"
-  (lambda () (interactive) (org-capture nil "t")))
-(define-key global-map "\C-cn"
-  (lambda () (interactive) (org-capture nil "n")))
-(define-key global-map "\C-cj"
-  (lambda () (interactive) (org-capture nil "j")))
-
 (global-set-key "\C-cl" 'org-store-link)
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cb" 'org-iswitchb)
@@ -500,26 +532,40 @@ the line."
 (setq org-capture-templates
       '(("t" "Task" entry (file+headline org-default-notes-file "Inbox")
 		 "* TODO %?\n")
+		("n" "Note" entry (file+headline org-default-notes-file "Inbox")
+		 "* NOTE %?\n")
 		("j" "Journal" entry(file+datetree org-default-journal-file)
 		 "* %?\n%T")	 ;; "* [%<%R>] %?\n")
-		("s" "Scheduled Task" entry (file+headline org-default-notes-file "Inbox")
-		 "* SCHEDULED: %?\n%^t\n")
-		("d" "Done Task" entry (file+headline org-default-notes-file "Inbox")
-		 "* DONE %?\nCLOSED: %U\n")
-		("n" "Next Task" entry (file+headline org-default-notes-file "Inbox")
-		 "* NEXT %?\n")
-		("w" "Wait Task" entry (file+headline org-default-notes-file "Inbox")
-		 "* WAIT %?\n")))
+		;; ("s" "Scheduled Task" entry (file+headline org-default-notes-file "Inbox")
+		;;  "* SCHEDULED: %?\n%^t\n")
+		;; ("d" "Done Task" entry (file+headline org-default-notes-file "Inbox")
+		;;  "* DONE %?\nCLOSED: %U\n")
+		;; ("n" "Next Task" entry (file+headline org-default-notes-file "Inbox")
+		;;  "* NEXT %?\n")
+		;; ("w" "Wait Task" entry (file+headline org-default-notes-file "Inbox")
+		;;  "* WAIT %?\n")
+		))
+
+(define-key global-map "\C-ct"
+  (lambda () (interactive) (org-capture nil "t")))
+(define-key global-map "\C-cj"
+  (lambda () (interactive) (org-capture nil "j")))
+(define-key global-map "\C-cn"
+  (lambda () (interactive) (org-capture nil "n")))
+;; (define-key global-map "\C-cs"
+;;   (lambda () (interactive) (org-capture nil "s")))
+;; (define-key global-map "\C-cd"
+;;   (lambda () (interactive) (org-capture nil "d")))
 
 (setq org-todo-keyword-faces
       '(("TODO" . org-warning)
-		("NEXT" . "yellow")
-		("MAYBE" . "orange")
 		("DONE" . "green")
-		("WAITING". "cyan")
-		("DELEGATED". "blue")
 		("WAIT". "orange")
-		("CANCELED" . (:foreground "magenta" :weight bold))))
+		("CANCELED" . (:foreground "magenta" :weight bold))
+		;("NEXT" . "yellow")
+		;("MAYBE" . "cyan")
+		;("DELEGATED". "blue")
+		))
 
 ;; Place tags close to the right-hand side of the window
 (add-hook 'org-finalize-agenda-hook 'place-agenda-tags)

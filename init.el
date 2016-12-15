@@ -6,9 +6,13 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(compilation-message-face (quote default))
+ '(helm-source-names-using-follow (quote ("Find tag from here")))
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
+ '(package-selected-packages
+   (quote
+	(helm-gtags wavefront-obj-mode yasnippet which-key wgrep-helm use-package swoop smart-tabs-mode smart-tab python-mode paradox ox-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit jabber iedit helm-swoop helm-projectile helm-package helm-ag flycheck expand-region exec-path-from-shell company-quickhelp company-jedi company-irony cmake-mode auto-highlight-symbol)))
  '(paradox-github-token t)
  '(scroll-bar-mode nil)
  '(set-mark-command-repeat-pop t))
@@ -68,10 +72,10 @@
 
 (require 'package)
 (setq package-enable-at-startup nil)
-;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
-(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-;; (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+;;(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (package-initialize)
 
 ;; Bootstrap 'use-package'
@@ -173,7 +177,14 @@
   (use-package helm-package)
   (use-package helm-projectile
 	:config
-	(helm-projectile-on)) 
+	(helm-projectile-on))
+  (use-package helm-gtags
+	:init (setq helm-gtags-suggested-key-mapping t)
+	:config (helm-gtags-mode)
+	(add-hook 'c-mode-hook 'helm-gtags-mode)
+	(add-hook 'c++-mode-hook 'helm-gtags-mode)
+	(add-hook 'python-mode-hook 'helm-gtags-mode)
+	(add-hook 'javascript-mode-hook 'helm-gtags-mode))
   (use-package helm-swoop
 	:bind ("M-i" . helm-swoop))
   (helm-mode 1)
@@ -203,6 +214,9 @@
   
 ;; :map magit-mode-map
 ;; 	 ([tab] . magit-section-toggle)))
+
+
+;; (setq jabber-invalid-certificate-servers '("jabber.ccc.de"))
 
 (use-package markdown-mode
   :ensure t
@@ -329,10 +343,10 @@
 
 
 (add-hook 'c-mode-common-hook '(lambda ()
-				 ;;(c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
+				 (c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
 				 ;;(c-toggle-auto-state 1) ;; Auto newline state
 				 (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
-				 (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
+			     ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
 				 (superword-mode)))
 
 (setq-default c-default-style "stroustrup"
@@ -546,7 +560,28 @@ Does not set point.  Does nothing if mark ring is empty."
         (goto-char (mark t)))
       (deactivate-mark))))
 
+(defun just-one-space-in-region (beg end)
+  "replace all whitespace in the region with single spaces"
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region beg end)
+      (goto-char (point-min))
+      (while (re-search-forward "\\s-+" nil t)
+        (replace-match " ")))))
 
+(require 'rect)  
+(defun just-one-space-in-rect-line (start end)
+  (save-restriction
+    (save-match-data
+      (narrow-to-region (+ (point) start)
+                        (+ (point) end))
+      (while (re-search-forward "\\s-+" nil t)
+        (replace-match " ")))))
+(defun just-one-space-in-rect (start end)
+  "replace all whitespace in the rectangle with single spaces"
+  (interactive "r")
+  (apply-on-rectangle 'just-one-space-in-rect-line start end))
 ;; (defvar org-journal-file (concat org-dir "journal.org")
 ;;   "Path to OrgMode journal file.")
 ;; (defvar org-journal-date-format "%Y-%m-%d"

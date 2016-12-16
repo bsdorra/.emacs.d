@@ -422,13 +422,20 @@
 (global-set-key (kbd "<f8>") 'recompile)
 
 (defun config () (interactive) (find-file "~/.emacs.d/init.el"))
-(global-set-key (kbd "<f10>") 'config)
-
 (defun reload-config ()
   "reload your .emacs file without restarting Emacs"
   (interactive)							
   (load-file "~/.emacs.d/init.el"))
+
+(defun commit-and-push-config ()
+  (interactive)
+  (shell-command
+   "git commit init.el -m\"auto commit config change\""
+   ))
+
 (global-set-key (kbd "<f9>") 'reload-config)
+(global-set-key (kbd "<f10>") 'config)
+(global-set-key (kbd "<f12>") 'commit-and-push-config)
 
 ;; One line comments. Original idea from:
 ;; http://www.opensubscriber.com/message/emacs-devel@gnu.org/10971693.html
@@ -508,6 +515,30 @@ the line."
   "Go to beginning of match."
   (when isearch-forward (goto-char isearch-other-end)))
 
+
+(defadvice
+    isearch-forward
+    (after isearch-forward-recenter activate)
+  (recenter))
+(ad-activate 'isearch-forward)
+
+(defadvice
+    isearch-backward
+    (after isearch-backward-recenter activate)
+  (recenter))
+(ad-activate 'isearch-backward)
+
+(defadvice
+    isearch-repeat-forward
+    (after isearch-repeat-forward-recenter activate)
+  (recenter))
+(ad-activate 'isearch-repeat-forward)
+
+(defadvice
+    isearch-repeat-backward
+    (after isearch-repeat-backward-recenter activate)
+  (recenter))
+(ad-activate 'isearch-repeat-backward)
 
 
 ;;;=== Org Mode =======================================

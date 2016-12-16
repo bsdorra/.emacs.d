@@ -430,7 +430,7 @@
 (defun commit-and-push-config ()
   (interactive)
   (shell-command
-   "git commit init.el -m\"auto commit config change\""
+   "git commit init.el -m\"auto commit config change\" && git push origin master"
    ))
 
 (global-set-key (kbd "<f9>") 'reload-config)

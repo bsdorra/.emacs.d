@@ -6,6 +6,7 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(compilation-message-face (quote default))
+ '(helm-source-names-using-follow (quote ("Find tag from here")))
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
@@ -47,7 +48,7 @@
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
 (setq auto-window-vscroll nil)
-(setq mouse-wheel-scroll-amount '(4 ((shift) . 1))) ;; one line at a time
+(setq mouse-wheel-scroll-amount '(2 ((shift) . 1))) ;; one line at a time
 (setq mouse-wheel-progressive-speed nil) ;; accelerate scrolling
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 (setq-default cursor-type 'bar)
@@ -60,6 +61,7 @@
 (show-paren-mode t) ;; show matching brackets
 (delete-selection-mode t) ;; replace selection on typing or yank
 (global-auto-revert-mode) ;; auto update buffer changed on disk
+(setq ring-bell-function 'ignore)
 (setq gdb-many-windows t) ;; use gdb-many-windows by default
 ;; (setq gdb-show-main t) ;; Non-nil means display source file containing the main routine at startup
 (electric-pair-mode t) ;; auto closing brackets/parens
@@ -73,10 +75,10 @@
 
 (require 'package)
 (setq package-enable-at-startup nil)
-(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("marmalade" . "https://marmalade-repo.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")
-						 ))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
+;;(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (package-initialize)
 
 ;; Bootstrap 'use-package'
@@ -153,7 +155,7 @@
   ;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
 
 (use-package helm
-  ;;:diminish helm-mode
+  :diminish helm-mode
   :init 
   (require 'helm-config)
   :bind
@@ -170,23 +172,27 @@
    ("C-z" .  helm-select-action))
   :config
   (define-key helm-map [tab] 'helm-execute-persistent-action)
+  (setq-default helm-follow-mode-persistent t)
   (setq helm-follow-mode-persistent t)
   (setq helm-mode-fuzzy-match t)
   (setq helm-completion-in-region-fuzzy-match t)
   (use-package helm-package)
-  (use-package helm-projectile)
+  ;; (use-package helm-projectile
+  ;; 	:config
+  ;; 	(helm-projectile-on))
   (use-package helm-gtags
 	:init
-	(setq helm-gtags-auto-update t)
 	(setq helm-gtags-suggested-key-mapping t)
-	;(setq helm-gtags-ignore-case t)
 	(setq helm-gtags-auto-update t)
 	;; (setq helm-gtags-prefix-key "\C-t")
-	:config
+	;;(setq helm-gtags-ignore-case t)
+	:config (helm-gtags-mode)
 	(add-hook 'c-mode-hook 'helm-gtags-mode)
 	(add-hook 'c++-mode-hook 'helm-gtags-mode)
 	(add-hook 'python-mode-hook 'helm-gtags-mode)
 	(add-hook 'javascript-mode-hook 'helm-gtags-mode))
+  (use-package helm-swoop
+	:bind ("M-i" . helm-swoop))
   (helm-mode 1)
   (setq helm-split-window-in-side-p nil
 		helm-move-to-line-cycle-in-source t
@@ -205,9 +211,6 @@
   :init
   (setq-default helm-follow-mode-persistent t))
 
-(use-package helm-swoop
-  :bind ("M-i" . helm-swoop))
-
 (use-package iedit)
 
 (use-package irony
@@ -222,6 +225,9 @@
   
 ;; :map magit-mode-map
 ;; 	 ([tab] . magit-section-toggle)))
+
+
+;; (setq jabber-invalid-certificate-servers '("jabber.ccc.de"))
 
 (use-package markdown-mode
   :ensure t
@@ -369,12 +375,13 @@
 (require 'cc-mode)
 
 
-(add-hook 'c-mode-common-hook '(lambda ()
-				 ;;(c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
-				 ;; (c-toggle-auto-state 1) ;; Auto newline state
-				 (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
-				 (define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
-				 (superword-mode)))
+(add-hook 'c-mode-common-hook
+		  '(lambda ()
+			 (c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
+			 ;;(c-toggle-auto-state 1) ;; Auto newline state
+			 (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
+			 ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
+			 (superword-mode)))
 ;; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
 
 (setq-default c-default-style "stroustrup"
@@ -592,7 +599,28 @@ Does not set point.  Does nothing if mark ring is empty."
         (goto-char (mark t)))
       (deactivate-mark))))
 
+(defun just-one-space-in-region (beg end)
+  "replace all whitespace in the region with single spaces"
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region beg end)
+      (goto-char (point-min))
+      (while (re-search-forward "\\s-+" nil t)
+        (replace-match " ")))))
 
+(require 'rect)  
+(defun just-one-space-in-rect-line (start end)
+  (save-restriction
+    (save-match-data
+      (narrow-to-region (+ (point) start)
+                        (+ (point) end))
+      (while (re-search-forward "\\s-+" nil t)
+        (replace-match " ")))))
+(defun just-one-space-in-rect (start end)
+  "replace all whitespace in the rectangle with single spaces"
+  (interactive "r")
+  (apply-on-rectangle 'just-one-space-in-rect-line start end))
 ;; (defvar org-journal-file (concat org-dir "journal.org")
 ;;   "Path to OrgMode journal file.")
 ;; (defvar org-journal-date-format "%Y-%m-%d"
@@ -712,3 +740,24 @@ Does not set point.  Does nothing if mark ring is empty."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

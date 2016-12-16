@@ -4,3 +4,15 @@ semanticdb/
 *.*~
 irony
 projectile*
+#init.el#
+%*%~
+.#*
+.mc-lists.el
+eshell/
+ido.last
+jabber-avatar-cache/
+recentf
+recentf~
+server/
+snippets/
+url/

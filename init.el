@@ -14,6 +14,13 @@
    (quote
 	("e:/docs/thoughts_on_productivity.org" "z:/org/gtd.org" "z:/org/journal.org")))
  '(paradox-github-token t)
+ '(safe-local-variable-values
+   (quote
+	((projectile-project-run-cmd . "\".build/RelWithDebInfo/p2studio.exe\"")
+	 (projectile-project-compilation-cmd . "cmake .build --target p2studio --config RelWithDebInf")
+	 (projectile-project-run-cmd . ".build/RelWithDebInfo/p2studio.exe")
+	 (projectile-run-project . ".build/RelWithDebInfo/p2studio.exe")
+	 (projectile-project-compilation-cmd . "cmake .build --target p2studio --config RelWithDebInfo"))))
  '(scroll-bar-mode nil)
  '(set-mark-command-repeat-pop t))
 
@@ -652,6 +659,35 @@ Does not set point.  Does nothing if mark ring is empty."
   "replace all whitespace in the rectangle with single spaces"
   (interactive "r")
   (apply-on-rectangle 'just-one-space-in-rect-line start end))
+
+
+;; .dir-locals stuff
+(defun my-reload-dir-locals-for-current-buffer ()
+  "reload dir locals for the current buffer"
+  (interactive)
+  (let ((enable-local-variables :all))
+    (hack-dir-local-variables-non-file-buffer)))
+
+(defun my-reload-dir-locals-for-all-buffer-in-this-directory ()
+  "For every buffer with the same `default-directory` as the 
+current buffer's, reload dir-locals."
+  (interactive)
+  (let ((dir default-directory))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (equal default-directory dir))
+        (my-reload-dir-locals-for-current-buffer)))))
+
+(add-hook 'emacs-lisp-mode-hook
+          (defun enable-autoreload-for-dir-locals ()
+            (when (and (buffer-file-name)
+                       (equal dir-locals-file
+                              (file-name-nondirectory (buffer-file-name))))
+              (add-hook (make-variable-buffer-local 'after-save-hook)
+                        'my-reload-dir-locals-for-all-buffer-in-this-directory)))) 
+
+
+
 ;; (defvar org-journal-file (concat org-dir "journal.org")
 ;;   "Path to OrgMode journal file.")
 ;; (defvar org-journal-date-format "%Y-%m-%d"

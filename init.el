@@ -16,7 +16,8 @@
  '(paradox-github-token t)
  '(safe-local-variable-values
    (quote
-	((projectile-project-run-cmd . "\".build/RelWithDebInfo/p2studio.exe\"")
+	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
+	 (projectile-project-run-cmd . "\".build/RelWithDebInfo/p2studio.exe\"")
 	 (projectile-project-compilation-cmd . "cmake .build --target p2studio --config RelWithDebInf")
 	 (projectile-project-run-cmd . ".build/RelWithDebInfo/p2studio.exe")
 	 (projectile-run-project . ".build/RelWithDebInfo/p2studio.exe")
@@ -191,9 +192,9 @@
 	:init
 	(setq helm-gtags-suggested-key-mapping t)
 	(setq helm-gtags-auto-update t)
-	;; (setq helm-gtags-prefix-key "\C-t")
 	;;(setq helm-gtags-ignore-case t)
 	:config (helm-gtags-mode)
+	(setq helm-gtags-prefix-key "\C-t")
 	(add-hook 'c-mode-hook 'helm-gtags-mode)
 	(add-hook 'c++-mode-hook 'helm-gtags-mode)
 	(add-hook 'python-mode-hook 'helm-gtags-mode)

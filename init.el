@@ -6,14 +6,13 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(compilation-message-face (quote default))
- '(helm-source-names-using-follow (quote ("Find tag from here")))
+ '(helm-source-names-using-follow (quote ("RTags Helm" "Find tag from here")))
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
- '(org-agenda-files
+ '(package-selected-packages
    (quote
-	("e:/docs/thoughts_on_productivity.org" "z:/org/gtd.org" "z:/org/journal.org")))
- '(paradox-github-token t)
+	(rtags yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab python-mode pug-mode paradox ox-jira org-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-ag gtags flycheck expand-region exec-path-from-shell esup company-jedi company-irony cmake-mode auto-highlight-symbol)))
  '(safe-local-variable-values
    (quote
 	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
@@ -26,6 +25,9 @@
  '(set-mark-command-repeat-pop t))
 
 
+;;----------------------------------------------------------------------------
+;; General Settings
+;;----------------------------------------------------------------------------
 (setq debug-on-error nil)
 ;;(server-start))
 (load "server")
@@ -56,7 +58,7 @@
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
 (setq auto-window-vscroll nil)
-(setq mouse-wheel-scroll-amount '(2 ((shift) . 1))) ;; one line at a time
+(setq mouse-wheel-scroll-amount '(4 ((shift) . 1))) ;; one line at a time
 (setq mouse-wheel-progressive-speed nil) ;; accelerate scrolling
 (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 (setq-default cursor-type 'bar)
@@ -78,9 +80,28 @@
 			      (?\{ . ?\})
 			      (?\' . ?\')
 			      ))
+(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
 
 
+;;----------------------------------------------------------------------------
+;; Emacs config
+;;----------------------------------------------------------------------------
+(defun config () (interactive) (find-file "~/.emacs.d/init.el"))
+(defun reload-config ()
+  "reload your .emacs file without restarting Emacs"
+  (interactive)							
+  (load-file "~/.emacs.d/init.el"))
 
+(defun commit-and-push-config ()
+  (interactive)
+  (shell-command
+   "git commit init.el -m\"auto commit config change\" && git push origin master"
+   ))
+
+
+;;----------------------------------------------------------------------------
+;; Packages
+;;----------------------------------------------------------------------------
 (require 'package)
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
@@ -101,7 +122,7 @@
 ;;   :ensure t)
 
 (use-package auto-highlight-symbol
-  :disabled
+  ;;:disabled
   :init (auto-highlight-symbol-mode))
 
 (use-package cmake-mode
@@ -111,29 +132,31 @@
 				  ("\\.cmake\\'" . cmake-mode))
 				auto-mode-alist)))
 
+
 (use-package company
-  :diminish company-mode
-  :init (company-mode)
+  ;;:diminish company-mode
   :config
-  (add-hook 'after-init-hook 'global-company-mode)
-  (setq company-dabbrev-downcase nil)
-  (setq company-idle-delay 0)
-  ;; replace the `completion-at-point' and `complete-symbol' bindings in
-  ;; irony-mode's buffers by irony-mode's function
-  (defun my-irony-mode-hook ()
-	(define-key irony-mode-map [remap completion-at-point]
-	  'irony-completion-at-point-async)
-	(define-key irony-mode-map [remap complete-symbol]
-	  'irony-completion-at-point-async))
-  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-  ;; (setq company-quickhelp-mode t)
-  ;;(define-key company-mode-map [tab] 'company-complete-common-or-cycle)
-  (define-key company-active-map [tab] 'company-complete-common-or-cycle) 
+  (company-mode)
+  (global-company-mode)
+  ;;(company-quickhelp-mode)
+  (define-key company-active-map [tab] 'company-complete-common-or-cycle)
+  (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
+  (setq company-dabbrev-downcase case-replace)
+  (setq company-idle-delay 1)
+  (when is-mac(push 'company-rtags company-backends))
   (use-package company-irony
-	:ensure t
-	:config
-	(add-to-list 'company-backends 'company-irony))
+  	:ensure t
+  	:config
+  	(add-to-list 'company-backends 'company-irony)
+	;; replace the `completion-at-point' and `complete-symbol' bindings in
+	;; irony-mode's buffers by irony-mode's function
+	(defun my-irony-mode-hook ()
+	  (define-key irony-mode-map [remap completion-at-point]
+		'irony-completion-at-point-async)
+	  (define-key irony-mode-map [remap complete-symbol]
+		'irony-completion-at-point-async))
+	(add-hook 'irony-mode-hook 'my-irony-mode-hook)
+	(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
   (use-package company-jedi
 	;;:disabled
     :config
@@ -144,15 +167,14 @@
 	  )
 	(add-hook 'python-mode-hook 'my/python-mode-hook)))
 
+
 (use-package exec-path-from-shell
   :config
   (when (memq window-system '(mac ns))
 	(exec-path-from-shell-initialize)))
 
-(use-package expand-region
-  :config
-  (global-set-key (kbd "C-.") 'er/expand-region)
-  (global-set-key (kbd "C-,") 'er/contract-region))
+(use-package expand-region)
+
 
 (use-package flycheck
   :disabled  
@@ -179,30 +201,18 @@
    ("C-i" . helm-execute-persistent-action)
    ("C-z" .  helm-select-action))
   :config
+  (helm-mode)
   (define-key helm-map [tab] 'helm-execute-persistent-action)
-  (setq-default helm-follow-mode-persistent t)
-  (setq helm-follow-mode-persistent t)
-  (setq helm-mode-fuzzy-match t)
-  (setq helm-completion-in-region-fuzzy-match t)
   (use-package helm-package)
-  ;; (use-package helm-projectile
-  ;; 	:config
-  ;; 	(helm-projectile-on))
-  (use-package helm-gtags
-	:init
-	(setq helm-gtags-suggested-key-mapping t)
-	(setq helm-gtags-auto-update t)
-	;;(setq helm-gtags-ignore-case t)
-	:config (helm-gtags-mode)
-	(setq helm-gtags-prefix-key "\C-t")
-	(add-hook 'c-mode-hook 'helm-gtags-mode)
-	(add-hook 'c++-mode-hook 'helm-gtags-mode)
-	(add-hook 'python-mode-hook 'helm-gtags-mode)
-	(add-hook 'javascript-mode-hook 'helm-gtags-mode))
+  (use-package helm-projectile
+  	:config
+  	(helm-projectile-on)) 
   (use-package helm-swoop
 	:bind ("M-i" . helm-swoop))
-  (helm-mode 1)
+  (use-package helm-ag)
   (setq helm-split-window-in-side-p nil
+		helm-mode-fuzzy-match t
+		helm-completion-in-region-fuzzy-match t
 		helm-move-to-line-cycle-in-source t
 		helm-ff-search-library-in-sexp t
 		helm-scroll-amount 4
@@ -215,21 +225,22 @@
 		helm-follow-mode-persistent t
 		))
 
-(use-package helm-ag
-  :init
-  (setq-default helm-follow-mode-persistent t))
 
 (use-package iedit)
 
-(use-package irony
-  :disabled
+;; fallback from rtags to irony on windows system
+(when is-win (use-package irony
+  ;;:disabled
   :config
   (add-hook 'c++-mode-hook 'irony-mode)
   (add-hook 'c-mode-hook 'irony-mode)
-  (add-hook 'objc-mode-hook 'irony-mode))
+  (add-hook 'objc-mode-hook 'irony-mode)))
 
 (use-package magit
-  :bind ("C-x g" . magit-status))
+  :bind ("C-x g" . magit-status)
+  :config
+  (if is-win
+	  (setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe")))
   
 ;; :map magit-mode-map
 ;; 	 ([tab] . magit-section-toggle)))
@@ -287,7 +298,7 @@
 		projectile-indexing-method 'alien
 		))
 
-(use-package pug-mode
+(use-package pug-mode 
   :config (setq tab-width 2)
   :mode ("\\.pug\\'" . pug-mode))
 
@@ -301,11 +312,16 @@
 			  (setq tab-width 4)
 			  (setq python-indent 4))))
 
+(use-package smartscan
+  :defer t
+  :config (global-smartscan-mode t))
+
 (use-package smart-tab
   :init(global-smart-tab-mode))
 
 (use-package smart-tabs-mode
   :config
+  (smart-tabs-insinuate 'c++ 'c 'javascript 'python)
   (smart-tabs-advice py-indent-line py-indent-offset)
   (smart-tabs-advice py-newline-and-indent py-indent-offset)
   (smart-tabs-advice py-indent-region py-indent-offset)
@@ -336,68 +352,154 @@
   :commands(yas-minor-mode)
   :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )
-  (progn
-	(add-hook 'prog-mode-hook #'yas-minor-mode)
-	(add-hook 'org-mode-hook #'yas-minor-mode))
   :config
   (progn
-	(yas-reload-all)))
+	(yas-reload-all))
+	(add-hook 'prog-mode-hook #'yas-minor-mode)
+	(add-hook 'org-mode-hook  #'yas-minor-mode))
 
-;; ;; handle tab behavior. decide between yas, indent or company complete
-;; (defun check-expansion ()
-;;   (save-excursion
-;; 	(if (looking-at "\\_>") t
-;; 	  (backward-char 1)
-;; 	  (if (looking-at "\\.") t
-;; 		(backward-char 1)
-;; 		(if (looking-at "->") t nil)))))
 
-;; (defun do-yas-expand ()
-;;   (let ((yas/fallback-behavior 'return-nil))
-;; 	(yas/expand)))
+(use-package helm-gtags
+  :init
+  ;(setq helm-gtags-suggested-key-mapping t)
+  (setq helm-gtags-auto-update t)
+  ;; (setq helm-gtags-prefix-key "\C-t")
+  ;;(setq helm-gtags-ignore-case t)
+  :config
+  (helm-gtags-mode)
+  (when is-win (add-hook 'c-mode-common-hook 'helm-gtags-mode))
+  (when is-win (add-hook 'c++-mode-common-hook 'helm-gtags-mode))
+  (add-hook 'python-mode-hook 'helm-gtags-mode)
+  (add-hook 'javascript-mode-hook 'helm-gtags-mode))
 
-;; (defun tab-indent-or-complete ()
+(use-package rtags
+  :config
+  ;; install standard rtags keybindings. Do M-. on the symbol below to
+  ;; jump to definition and see the keybindings.
+  ;;(rtags-enable-standard-keybindings)
+  (setq rtags-use-helm t)
+  (require 'rtags-helm)
+  ;; company completion setup
+  (setq rtags-autostart-diagnostics t)
+  (rtags-diagnostics)
+  (setq rtags-completions-enabled t)
+  (when is-mac(add-hook 'c-mode-common-hook 'rtags-start-process-unless-running))
+  (when is-mac(add-hook 'c++-mode-common-hook 'rtags-start-process-unless-running)))
+
+;; handle tab behavior. decide between yas, indent or company complete
+(defun check-expansion ()
+  (save-excursion
+	(if (looking-at "\\_>") t
+	  (backward-char 1)
+	  (if (looking-at "\\.") t
+		(backward-char 1)
+		(if (looking-at "->") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+	(yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+      (minibuffer-complete)
+    (if (or (not yas/minor-mode)
+			(null (do-yas-expand)))
+		(if (check-expansion)
+			(company-complete-common-or-cycle)
+		  (indent-for-tab-command)))))
+
+(global-set-key [tab] 'tab-indent-or-complete)
+
+
+;;----------------------------------------------------------------------------
+;; RTags
+;;----------------------------------------------------------------------------
+;; (defun use-rtags (&optional useFileManager)
+;;   (and (rtags-executable-find "rc")
+;;        (cond ((not (gtags-get-rootpath)) t)
+;;              ((and (not (eq major-mode 'c++-mode))
+;;                    (not (eq major-mode 'c-mode))) (rtags-has-filemanager))
+;;              (useFileManager (rtags-has-filemanager))
+;;              (t (rtags-is-indexed)))))
+
+(defun rtags-gtags-function-switch (rtags_func gtags_func &optional prefix)
+  (if (or (not (rtags-executable-find "rc"))
+		  (and (not (funcall rtags_func prefix)) rtags-last-request-not-indexed))
+	  (funcall gtags_func)))
+
+
+(defun tags-find-symbol-at-point (&optional prefix)
+  (interactive "p")
+  (rtags-gtags-function-switch 'rtags-find-symbol-at-point 'helm-gtags-find-tag-from-here prefix))
+
+(defun tags-find-reference-at-point (&optional prefix)
+  (interactive "p")
+  (rtags-gtags-function-switch 'rtags-find-reference-at-point 'helm-gtags-find-rtag prefix))
+
+(defun tags-stack-back (&optional prefix)
+  (interactive "p")
+  (rtags-gtags-function-switch 'rtags-location-stack-back 'helm-gtags-previous-history prefix))
+
+(defun tags-stack-forward (&optional prefix)
+  (interactive "p")
+  (rtags-gtags-function-switch 'rtags-location-stack-forward 'helm-gtags-next-history prefix))
+
+
+;; (defun tags-find-symbol ()
 ;;   (interactive)
-;;   (if (minibufferp)	  
-;; 	  (minibuffer-complete)
-;; 	(if (or (not yas/minor-mode)
-;; 			(null (do-yas-expand)))
-;; 		(if (check-expansion)
-;; 			(company-complete-common)
-;; 		  (indent-for-tab-command)))))
-
-;; (global-set-key [tab] 'tab-indent-or-complete)
-
-
-(if is-win
-	(setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe"))
-
-(global-set-key (kbd "C-c e") 'fc-eval-and-replace)
-;; (global-set-key "\C-k" 'kill-whole-line)
-
-(global-set-key (kbd "M-p") (lambda () (interactive) (scroll-down 4)))
-(global-set-key (kbd "M-n") (lambda () (interactive) (scroll-up 4)))
-;; (global-set-key (kbd "M-g") 'goto-line)
-(global-set-key (kbd "C-x C-b") 'previous-buffer)
-
-(require 'cc-mode)
+;;   (call-interactively (if (use-rtags) 'rtags-find-symbol 'gtags-find-symbol)))
+;; (defun tags-find-references ()
+;;   (interactive)
+;;   (call-interactively (if (use-rtags) 'rtags-find-references 'gtags-find-rtag)))
+;; (defun tags-find-file ()
+;;   (interactive)
+;;   (call-interactively (if (use-rtags t) 'rtags-find-file 'gtags-find-file)))
+;; (defun tags-imenu ()
+;;   (interactive)
+;;   (call-interactively (if (use-rtags t) 'rtags-imenu 'idomenu)))
 
 
-(add-hook 'c-mode-common-hook
-		  '(lambda ()
-			 (c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
-			 ;;(c-toggle-auto-state 1) ;; Auto newline state
-			 (define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
-			 ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
-			 (superword-mode)))
-;; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
+
+
+
+
+;;----------------------------------------------------------------------------
+;; C/C++ Mode 
+;;----------------------------------------------------------------------------
+(use-package cc-mode
+  :config
+  (add-hook 'c-mode-common-hook
+			'(lambda ()
+			   ;; (c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
+			   ;;(c-toggle-auto-state 1) ;; Auto newline state
+			   ;;(define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
+			   (define-key c-mode-base-map (kbd "<C-tab>") (function company-complete))
+			   (define-key c-mode-base-map (kbd "M-.") (function tags-find-symbol-at-point))
+			   (define-key c-mode-base-map (kbd "M-,") (function tags-find-references-at-point))
+			   (define-key c-mode-base-map (kbd "M-[") (function tags-stack-back))
+			   (define-key c-mode-base-map (kbd "M-]") (function tags-stack-forward))
+			   ;; (define-key c-mode-base-map (kbd "M-;") (function tags-find-file))
+			   ;; (define-key c-mode-base-map (kbd "C-.") (function tags-find-symbol))
+			   ;; (define-key c-mode-base-map (kbd "C-,") (function tags-find-references))
+			   ;; (define-key c-mode-base-map (kbd "C-<") (function rtags-find-virtuals-at-point))
+			   ;; (define-key c-mode-base-map (kbd "M-i") (function tags-imenu))
+
+			   ;; (define-key global-map (kbd "M-.") (function tags-find-symbol-at-point))
+			   ;; (define-key global-map (kbd "M-,") (function tags-find-references-at-point))
+			   ;; (define-key global-map (kbd "M-;") (function tags-find-file))
+			   ;; (define-key global-map (kbd "C-.") (function tags-find-symbol))
+			   ;; (define-key global-map (kbd "C-,") (function tags-find-references))
+			   ;; (define-key global-map (kbd "C-<") (function rtags-find-virtuals-at-point))
+			   ;; (define-key global-map (kbd "M-i") (function tags-imenu))
+
+			   ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
+			   ;; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
+			   (superword-mode))))
 
 (setq-default c-default-style "stroustrup"
 			  c-basic-offset 4
 			  tab-width 4)
-
-(smart-tabs-insinuate 'c++ 'c 'javascript 'python)
-
 
 (defun yank-and-indent ()
   "Yank and then indent the newly formed region according to mode."
@@ -414,36 +516,7 @@
 			(setq line-move-visual t)
 			))
 
-(add-to-list 'auto-mode-alist '("\\.fx\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.inl\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.mlc\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.glsl\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.frag\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.vert\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.fp\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.vp\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.hxx\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
-(add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
-(global-set-key (kbd "<f8>") 'recompile)
-
-(defun config () (interactive) (find-file "~/.emacs.d/init.el"))
-(defun reload-config ()
-  "reload your .emacs file without restarting Emacs"
-  (interactive)							
-  (load-file "~/.emacs.d/init.el"))
-
-(defun commit-and-push-config ()
-  (interactive)
-  (shell-command
-   "git commit init.el -m\"auto commit config change\" && git push origin master"
-   ))
-
-(global-set-key (kbd "<f9>") 'reload-config)
-(global-set-key (kbd "<f10>") 'config)
-(global-set-key (kbd "<f12>") 'commit-and-push-config)
 
 ;; One line comments. Original idea from:
 ;; http://www.opensubscriber.com/message/emacs-devel@gnu.org/10971693.html
@@ -458,11 +531,6 @@ the line."
   (if (and (not (region-active-p)) (not (looking-at "[ \t]*$")))
       (comment-or-uncomment-region (line-beginning-position) (line-end-position))
     (comment-dwim arg)))
-
-
-;; (global-set-key (kbd "s-/") 'comment-dwim-line)
-(global-set-key (kbd "M-;") 'comment-dwim-line) 
-
 
 
 (defun toggle-window-split ()
@@ -489,7 +557,6 @@ the line."
 		  (set-window-buffer (next-window) next-win-buffer)
 		  (select-window first-win)
 		  (if this-win-2nd (other-window 1))))))
-(global-set-key (kbd "C-x |") 'toggle-window-split)
 
 
 (defun fc-eval-and-replace ()
@@ -549,7 +616,7 @@ the line."
 (ad-activate 'isearch-repeat-backward)
 
 
-;;;=== Org Mode =======================================
+;;;;=== Org Mode =======================================
 (setq org-agenda-directory "~/org/")
 (setq org-agenda-files (list org-agenda-directory));;(directory-files (expand-file-name org-agenda-directory) t "^[^\.][^#][[:alnum:]]+\.org$"))
 
@@ -591,17 +658,6 @@ the line."
 		;; ("w" "Wait Task" entry (file+headline org-default-notes-file "Inbox")
 		;;  "* WAIT %?\n")
 		))
-
-(define-key global-map "\C-ct"
-  (lambda () (interactive) (org-capture nil "t")))
-(define-key global-map "\C-cj"
-  (lambda () (interactive) (org-capture nil "j")))
-(define-key global-map "\C-cn"
-  (lambda () (interactive) (org-capture nil "n")))
-;; (define-key global-map "\C-cs"
-;;   (lambda () (interactive) (org-capture nil "s")))
-;; (define-key global-map "\C-cd"
-;;   (lambda () (interactive) (org-capture nil "d")))
 
 (setq org-todo-keyword-faces
       '(("TODO" . org-warning)
@@ -713,72 +769,6 @@ current buffer's, reload dir-locals."
 ;;       (insert "\n\n  "))))
 
 
-;; ;;Disable C-c [ and C-c ] in org-mode
-;; (add-hook 'org-mode-hook
-;;           (lambda ()
-;;             ;; Undefine C-c [ and C-c ] since this breaks my
-;;             ;; org-agenda files when directories are include It
-;;             ;; expands the files in the directories individually
-;;             (org-defkey org-mode-map "\C-c["    'undefined)
-;;             (org-defkey org-mode-map "\C-c]"    'undefined))
-;;           'append)
-
-
-;; ;;================================================================================
-
-;; (defvar semantic-tags-location-ring (make-ring 20))
-
-;; (defun semantic-goto-definition (point)
-;;   "Goto definition using semantic-ia-fast-jump
-;; save the pointer marker if tag is found"
-;;   (interactive "d")
-;;   (condition-case err
-;;       (progn
-;;         (ring-insert semantic-tags-location-ring (point-marker))
-;;         (semantic-ia-fast-jump point))
-;;     (error
-;;      ;;if not found remove the tag saved in the ring
-;;      (set-marker (ring-remove semantic-tags-location-ring 0) nil nil)
-;;      (signal (car err) (cdr err)))))
-
-;; (defun semantic-pop-tag-mark ()
-;;   "popup the tag save by semantic-goto-definition"
-;;   (interactive)
-;;   (if (ring-empty-p semantic-tags-location-ring)
-;;       (message "%s" "No more tags available")
-;;     (let* ((marker (ring-remove semantic-tags-location-ring 0))
-;;               (buff (marker-buffer marker))
-;;                  (pos (marker-position marker)))
-;;       (if (not buff)
-;;             (message "Buffer has been deleted")
-;;         (switch-to-buffer buff)
-;;         (goto-char pos)
-;; 	(recenter-top-bottom))
-;;       (set-marker marker nil nil))))
-
-;; (global-set-key (kbd "M-.") 'semantic-goto-definition)
-;; (global-set-key (kbd "M-*") 'semantic-pop-tag-mark)
-
-
-;;(add-hook 'python-mode-hook 'my/python-mode-hook)
-
-;; ;; ;; replace the `completion-at-point' and `complete-symbol' bindings in
-;; ;;; irony-mode's buffers by irony-mode's function
-;; (defun my-irony-mode-hook ()
-;;   (define-key irony-mode-map [remap completion-at-point]
-;;     'irony-completion-at-point-async)
-;;   (define-key irony-mode-map [remap complete-symbol]
-;;     'irony-completion-at-point-async))
-;; (add-hook 'irony-mode-hook 'my-irony-mode-hook)
-;; (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-
-
-
-;; (global-auto-highlight-symbol-mode t)
-;; (global-set-key (kbd "C-;") 'ahs-edit-mode)
-;; (global-set-key (kbd "C-*") 'auto-highlight-symbol-mode)
-
-
 ;; (defun increment-number-at-point (&optional amount)
 ;;   "Increment the number under point by `amount'"
 ;;   (interactive "p")
@@ -800,32 +790,62 @@ current buffer's, reload dir-locals."
 ;; ;; (define-key global-map [up] 'increment-number-at-point)
 ;; ;; (define-key global-map [down] 'decrement-number-at-point)
 
+;;----------------------------------------------------------------------------
+;; File mode association
+;;----------------------------------------------------------------------------
+(add-to-list 'auto-mode-alist '("\\.fx\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.inl\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.mlc\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.glsl\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.frag\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.vert\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.fp\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.vp\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.hxx\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
+(add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
+
+;;----------------------------------------------------------------------------
+;; Keybindings
+;;----------------------------------------------------------------------------
+(global-set-key (kbd "C-x |") 'toggle-window-split)
+;; (global-set-key (kbd "s-/") 'comment-dwim-line)
+(global-set-key (kbd "M-;") 'comment-dwim-line) 
+
+(global-set-key (kbd "C-.") 'er/expand-region)
+(global-set-key (kbd "C-,") 'er/contract-region)
+
+
+(global-set-key (kbd "C-c e") 'fc-eval-and-replace)
+;; (global-set-key "\C-k" 'kill-whole-line)
+
+(global-set-key (kbd "M-p") (lambda () (interactive) (scroll-down 4)))
+(global-set-key (kbd "M-n") (lambda () (interactive) (scroll-up 4)))
+;; (global-set-key (kbd "M-g") 'goto-line)
+(global-set-key (kbd "C-x C-b") 'previous-buffer)
 ;; (global-set-key (kbd "C-M-SPC") 'highlight-symbol-next)
+;; (global-auto-highlight-symbol-mode t)
+;; (global-set-key (kbd "C-;") 'ahs-edit-mode)
+;; (global-set-key (kbd "C-*") 'auto-highlight-symbol-mode)
+
+(global-set-key (kbd "<f8>") 'recompile)
+(global-set-key (kbd "<f9>") 'reload-config)
+(global-set-key (kbd "<f10>") 'config)
+(global-set-key (kbd "<f12>") 'commit-and-push-config)
+
+
+(define-key global-map "\C-ct"
+  (lambda () (interactive) (org-capture nil "t")))
+(define-key global-map "\C-cj"
+  (lambda () (interactive) (org-capture nil "j")))
+(define-key global-map "\C-cn"
+  (lambda () (interactive) (org-capture nil "n")))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

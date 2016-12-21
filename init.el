@@ -12,7 +12,7 @@
  '(mark-ring-max 64)
  '(package-selected-packages
    (quote
-	(ggtags rtags yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab python-mode pug-mode paradox ox-jira org-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-ag gtags flycheck expand-region exec-path-from-shell esup company-jedi company-irony cmake-mode auto-highlight-symbol)))
+	(dashboard ggtags rtags yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab python-mode pug-mode paradox ox-jira org-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-ag gtags flycheck expand-region exec-path-from-shell esup company-jedi company-irony cmake-mode auto-highlight-symbol)))
  '(safe-local-variable-values
    (quote
 	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
@@ -84,7 +84,7 @@
 			      ))
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
 (global-visual-line-mode)
-
+(winner-mode)
 
 ;;----------------------------------------------------------------------------
 ;; Emacs config
@@ -169,6 +169,12 @@
 	  )
 	(add-hook 'python-mode-hook 'my/python-mode-hook)))
 
+(use-package dashboard
+  :config
+  (dashboard-setup-startup-hook)
+  (setq dashboard-items '((recents  . 5)
+						  (bookmarks . 5)
+						  (projects . 5))))
 
 (use-package exec-path-from-shell
   :config
@@ -357,6 +363,7 @@
   :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )
   :config
+  (yas-minor-mode)
   (progn
 	(yas-reload-all))
 	(add-hook 'prog-mode-hook #'yas-minor-mode)
@@ -364,7 +371,7 @@
 
 
 (use-package helm-gtags
-  :defer
+ ;; :commands(helm-gtgas-mode)
   ;;(setq helm-gtags-suggested-key-mapping t)
   ;;(setq helm-gtags-prefix-key "\C-t")
   ;;(setq helm-gtags-ignore-case t)
@@ -377,7 +384,7 @@
   (add-hook 'javascript-mode-hook 'helm-gtags-mode))
 
 (use-package rtags
-  :if (not is-win)
+  :defer
   :init  
   (require 'rtags-helm)
   :config
@@ -441,7 +448,7 @@
   (setq tag (thing-at-point 'symbol))
   (if (or (not (use-rtags))
    		  (and (not (rtags-find-references-at-point prefix)) rtags-last-request-not-indexed))
-       (helm-gtags-find-symbol tag)))
+       (helm-gtags-find-rtag tag)))
 
 (defun tags-stack-back ()
   (interactive)
@@ -701,7 +708,7 @@ Does not set point.  Does nothing if mark ring is empty."
   (apply-on-rectangle 'just-one-space-in-rect-line start end))
 
 
-;; .dir-locals stuff
+;;;; .dir-locals autoloading 
 (defun my-reload-dir-locals-for-current-buffer ()
   "reload dir locals for the current buffer"
   (interactive)
@@ -726,6 +733,16 @@ current buffer's, reload dir-locals."
               (add-hook (make-variable-buffer-local 'after-save-hook)
                         'my-reload-dir-locals-for-all-buffer-in-this-directory)))) 
 
+;;;l hiding compilation buffer on successful compilation - from enberg on #emacs
+(setq compilation-finish-function
+	  (lambda (buf str)
+		(if (null (string-match ".*exited abnormally.*" str))
+			;;no errors, make the compilation window go away in a few seconds
+			(progn
+			  (run-at-time
+			   "0 sec" nil 'delete-windows-on
+			   (get-buffer-create "*compilation*"))
+			  (message "No Compilation Errors!")))))
 
 
 ;; (defvar org-journal-file (concat org-dir "journal.org")

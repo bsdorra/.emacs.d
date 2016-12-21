@@ -12,7 +12,7 @@
  '(mark-ring-max 64)
  '(package-selected-packages
    (quote
-	(rtags yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab python-mode pug-mode paradox ox-jira org-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-ag gtags flycheck expand-region exec-path-from-shell esup company-jedi company-irony cmake-mode auto-highlight-symbol)))
+	(ggtags rtags yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab python-mode pug-mode paradox ox-jira org-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-ag gtags flycheck expand-region exec-path-from-shell esup company-jedi company-irony cmake-mode auto-highlight-symbol)))
  '(safe-local-variable-values
    (quote
 	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
@@ -29,9 +29,9 @@
 ;; General Settings
 ;;----------------------------------------------------------------------------
 (setq debug-on-error nil)
-;;(server-start))
-(load "server")
-(unless (server-running-p) (server-start))
+(server-start)			  
+;;(load "server")
+;;(unless (server-running-p) (server-start))
 
 (defvar is-mac (equal system-type 'darwin))
 (defvar is-win (equal system-type 'windows-nt))
@@ -51,7 +51,8 @@
 (global-linum-mode t) ;; show line numbers
 (menu-bar-mode 0)
 (tool-bar-mode 0)
-(setq fill-column 100)
+(setq column-number-mode t);; enable column numbers
+(setq fill-column 80)
 (setq ns-pop-up-frames nil) ;; no new frame for file opened from finder
 (setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
@@ -81,6 +82,7 @@
 			      (?\' . ?\')
 			      ))
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+(global-visual-line-mode)
 
 
 ;;----------------------------------------------------------------------------
@@ -361,6 +363,7 @@
 
 (use-package helm-gtags
   :init
+  :defer
   ;(setq helm-gtags-suggested-key-mapping t)
   (setq helm-gtags-auto-update t)
   ;; (setq helm-gtags-prefix-key "\C-t")
@@ -403,14 +406,13 @@
   (interactive)
   (if (minibufferp)
       (minibuffer-complete)
-    (if (or (not yas/minor-mode)
+    (if (or (not yas-minor-mode)
 			(null (do-yas-expand)))
 		(if (check-expansion)
 			(company-complete-common-or-cycle)
 		  (indent-for-tab-command)))))
 
 (global-set-key [tab] 'tab-indent-or-complete)
-
 
 ;;----------------------------------------------------------------------------
 ;; RTags

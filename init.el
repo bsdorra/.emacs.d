@@ -22,6 +22,7 @@
 	 (projectile-run-project . ".build/RelWithDebInfo/p2studio.exe")
 	 (projectile-project-compilation-cmd . "cmake .build --target p2studio --config RelWithDebInfo"))))
  '(scroll-bar-mode nil)
+ '(send-mail-function (quote mailclient-send-it))
  '(set-mark-command-repeat-pop t))
 
 
@@ -123,14 +124,13 @@
 
 (use-package auto-highlight-symbol
   ;;:disabled
-  :init (auto-highlight-symbol-mode))
+  :config
+  (global-auto-highlight-symbol-mode))
 
 (use-package cmake-mode
-  :config
-  (setq auto-mode-alist
-		(append '(("CMakeLists\\.txt\\'" . cmake-mode)
-				  ("\\.cmake\\'" . cmake-mode))
-				auto-mode-alist)))
+  :mode
+  ("CMakeLists\\.txt\\'" . cmake-mode)
+  ("\\.cmake\\'" . cmake-mode))
 
 
 (use-package company
@@ -179,7 +179,7 @@
 (use-package flycheck
   :disabled  
   :config
-  (add-hook 'after-init-hook #'global-flycheck-mode)
+  (global-flycheck-mode)
   (add-hook 'c++-mode-hook (lambda () (setq flycheck-clang-language-standard "c++14")))
   (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++14"))))
   ;;(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
@@ -229,27 +229,25 @@
 (use-package iedit)
 
 ;; fallback from rtags to irony on windows system
-(when is-win (use-package irony
+(use-package irony
   ;;:disabled
+  :if is-win
   :config
   (add-hook 'c++-mode-hook 'irony-mode)
   (add-hook 'c-mode-hook 'irony-mode)
-  (add-hook 'objc-mode-hook 'irony-mode)))
+  (add-hook 'objc-mode-hook 'irony-mode))
 
 (use-package magit
   :bind ("C-x g" . magit-status)
+  ;; :map magit-mode-map
+  ;;  ([tab] . magit-section-toggle)))
   :config
   (if is-win
 	  (setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe")))
   
-;; :map magit-mode-map
-;; 	 ([tab] . magit-section-toggle)))
-
-
 ;; (setq jabber-invalid-certificate-servers '("jabber.ccc.de"))
 
 (use-package markdown-mode
-  :ensure t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
@@ -260,11 +258,11 @@
   :config (load-theme 'monokai t))
 
 (use-package multiple-cursors
-  :config
-  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
-  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-  (global-set-key (kbd "C-c C->") 'mc/mark-all-like-this))
+  :bind
+  ("C-S-c C-S-c" . mc/edit-lines)
+  ("C->" . mc/mark-next-like-this)
+  ("C-<" . mc/mark-previous-like-this)
+  ("C-c C->" . mc/mark-all-like-this))
 
 (use-package nyan-mode)
 
@@ -276,16 +274,16 @@
 	 (sh . t)
 	 (python . t)
 	 (emacs-lisp . t)   
-	 )))
+	 ))
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  (setq org-confirm-babel-evaluate nil))  
 
-(use-package ob-ipython
-  :config
-  (setq org-confirm-babel-evaluate nil)
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append))
+(use-package ob-ipython)
 
 (use-package ox-jira)
 
-(use-package paradox)
+(use-package paradox
+  :defer)
 
 (use-package projectile
   :diminish projectile-mode
@@ -343,13 +341,14 @@
 ;; (use-package wgrep)
 
 (use-package which-key
-  :init
+  :config
   (which-key-mode))
 
 (use-package yasnippet
   ;; :disabled
-  :diminish yas-minor-mode
-  :commands(yas-minor-mode)
+  ;;:diminish yas-minor-mode
+  :commands
+  (yas-minor-mode)
   :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )
   :config
@@ -360,31 +359,35 @@
 
 
 (use-package helm-gtags
-  :init
-  ;(setq helm-gtags-suggested-key-mapping t)
-  (setq helm-gtags-auto-update t)
-  ;; (setq helm-gtags-prefix-key "\C-t")
+  :defer
+  ;;:init
+  ;;(setq helm-gtags-suggested-key-mapping t)
+  ;;(setq helm-gtags-prefix-key "\C-t")
   ;;(setq helm-gtags-ignore-case t)
   :config
   (helm-gtags-mode)
+  (setq helm-gtags-auto-update t)
   (when is-win (add-hook 'c-mode-common-hook 'helm-gtags-mode))
   (when is-win (add-hook 'c++-mode-common-hook 'helm-gtags-mode))
   (add-hook 'python-mode-hook 'helm-gtags-mode)
   (add-hook 'javascript-mode-hook 'helm-gtags-mode))
 
 (use-package rtags
+  :init
+  (require 'rtags-helm)
   :config
   ;; install standard rtags keybindings. Do M-. on the symbol below to
   ;; jump to definition and see the keybindings.
   ;;(rtags-enable-standard-keybindings)
   (setq rtags-use-helm t)
-  (require 'rtags-helm)
   ;; company completion setup
   (setq rtags-autostart-diagnostics t)
   (rtags-diagnostics)
   (setq rtags-completions-enabled t)
   (when is-mac(add-hook 'c-mode-common-hook 'rtags-start-process-unless-running))
   (when is-mac(add-hook 'c++-mode-common-hook 'rtags-start-process-unless-running)))
+
+
 
 ;; handle tab behavior. decide between yas, indent or company complete
 (defun check-expansion ()
@@ -403,7 +406,7 @@
   (interactive)
   (if (minibufferp)
       (minibuffer-complete)
-    (if (or (not yas/minor-mode)
+    (if (or (not yas-minor-mode)
 			(null (do-yas-expand)))
 		(if (check-expansion)
 			(company-complete-common-or-cycle)
@@ -415,91 +418,53 @@
 ;;----------------------------------------------------------------------------
 ;; RTags
 ;;----------------------------------------------------------------------------
-;; (defun use-rtags (&optional useFileManager)
-;;   (and (rtags-executable-find "rc")
-;;        (cond ((not (gtags-get-rootpath)) t)
-;;              ((and (not (eq major-mode 'c++-mode))
-;;                    (not (eq major-mode 'c-mode))) (rtags-has-filemanager))
-;;              (useFileManager (rtags-has-filemanager))
-;;              (t (rtags-is-indexed)))))
-
-(defun rtags-gtags-function-switch (rtags_func gtags_func &optional prefix)
-  (if (or (not (rtags-executable-find "rc"))
-		  (and (not (funcall rtags_func prefix)) rtags-last-request-not-indexed))
-	  (funcall gtags_func)))
-
-
 (defun tags-find-symbol-at-point (&optional prefix)
-  (interactive "p")
-  (rtags-gtags-function-switch 'rtags-find-symbol-at-point 'helm-gtags-find-tag-from-here prefix))
+  (interactive "P")
+  (if (and (not (rtags-find-symbol-at-point prefix)) rtags-last-request-not-indexed)
+      (helm-gtags-find-tag-from-here)))
 
-(defun tags-find-reference-at-point (&optional prefix)
-  (interactive "p")
-  (rtags-gtags-function-switch 'rtags-find-reference-at-point 'helm-gtags-find-rtag prefix))
+(defun tags-find-references-at-point (&optional prefix)
+  (interactive "P")
+  (if (and (not (rtags-find-references-at-point prefix)) rtags-last-request-not-indexed)
+      (helm-gtags-find-rtag)))
 
-(defun tags-stack-back (&optional prefix)
-  (interactive "p")
-  (rtags-gtags-function-switch 'rtags-location-stack-back 'helm-gtags-previous-history prefix))
+(defun tags-stack-back ()
+  (interactive)
+  (if (and (not (rtags-location-stack-back)) rtags-last-request-not-indexed)
+      (helm-gtags-previous-history)))
 
-(defun tags-stack-forward (&optional prefix)
-  (interactive "p")
-  (rtags-gtags-function-switch 'rtags-location-stack-forward 'helm-gtags-next-history prefix))
-
-
-;; (defun tags-find-symbol ()
-;;   (interactive)
-;;   (call-interactively (if (use-rtags) 'rtags-find-symbol 'gtags-find-symbol)))
-;; (defun tags-find-references ()
-;;   (interactive)
-;;   (call-interactively (if (use-rtags) 'rtags-find-references 'gtags-find-rtag)))
-;; (defun tags-find-file ()
-;;   (interactive)
-;;   (call-interactively (if (use-rtags t) 'rtags-find-file 'gtags-find-file)))
-;; (defun tags-imenu ()
-;;   (interactive)
-;;   (call-interactively (if (use-rtags t) 'rtags-imenu 'idomenu)))
-
-
-
-
+(defun tags-stack-forward ()
+  (interactive)
+  (if (and (not (rtags-location-stack-forward)) rtags-last-request-not-indexed)
+      (helm-gtags-next-history)))
 
 
 ;;----------------------------------------------------------------------------
 ;; C/C++ Mode 
 ;;----------------------------------------------------------------------------
 (use-package cc-mode
+  :bind
+  ("<C-tab>" . company-complete)
+  ("M-." . tags-find-symbol-at-point)
+  ("M-," . tags-find-references-at-point)
+  ("M-[" . tags-stack-back)
+  ("M-]" . tags-stack-forward)
+  ;;(define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
+  ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
   :config
-  (add-hook 'c-mode-common-hook
-			'(lambda ()
-			   ;; (c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
-			   ;;(c-toggle-auto-state 1) ;; Auto newline state
-			   ;;(define-key c-mode-base-map (kbd "RET") 'newline-and-indent)
-			   (define-key c-mode-base-map (kbd "<C-tab>") (function company-complete))
-			   (define-key c-mode-base-map (kbd "M-.") (function tags-find-symbol-at-point))
-			   (define-key c-mode-base-map (kbd "M-,") (function tags-find-references-at-point))
-			   (define-key c-mode-base-map (kbd "M-[") (function tags-stack-back))
-			   (define-key c-mode-base-map (kbd "M-]") (function tags-stack-forward))
-			   ;; (define-key c-mode-base-map (kbd "M-;") (function tags-find-file))
-			   ;; (define-key c-mode-base-map (kbd "C-.") (function tags-find-symbol))
-			   ;; (define-key c-mode-base-map (kbd "C-,") (function tags-find-references))
-			   ;; (define-key c-mode-base-map (kbd "C-<") (function rtags-find-virtuals-at-point))
-			   ;; (define-key c-mode-base-map (kbd "M-i") (function tags-imenu))
+  (superword-mode)
+  ;;(c-toggle-hungry-state 1) ;; A single <DEL> deletes all preceding whitespace
+  ;;(c-toggle-auto-state 1) ;; Auto newline state
+  
+  )
 
-			   ;; (define-key global-map (kbd "M-.") (function tags-find-symbol-at-point))
-			   ;; (define-key global-map (kbd "M-,") (function tags-find-references-at-point))
-			   ;; (define-key global-map (kbd "M-;") (function tags-find-file))
-			   ;; (define-key global-map (kbd "C-.") (function tags-find-symbol))
-			   ;; (define-key global-map (kbd "C-,") (function tags-find-references))
-			   ;; (define-key global-map (kbd "C-<") (function rtags-find-virtuals-at-point))
-			   ;; (define-key global-map (kbd "M-i") (function tags-imenu))
-
-			   ;;(define-key c-mode-base-map (kbd "M-.") 'semantic-ia-fast-jump)
-			   ;; (lambda(point) (interactive "d") (semantic-ia-fast-jump point))))
-			   (superword-mode))))
 
 (setq-default c-default-style "stroustrup"
 			  c-basic-offset 4
 			  tab-width 4)
+
+
+
 
 (defun yank-and-indent ()
   "Yank and then indent the newly formed region according to mode."
@@ -806,6 +771,12 @@ current buffer's, reload dir-locals."
 (add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
+
+(defun switch-to-other-window-in-split ()
+  (interactive)
+  (other-window 1))
+
+(advice-add 'split-window-right :after #'switch-to-other-window-in-split)
 
 ;;----------------------------------------------------------------------------
 ;; Keybindings

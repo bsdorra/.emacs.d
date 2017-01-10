@@ -6,13 +6,11 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(compilation-message-face (quote default))
+ '(global-font-lock-mode t)
  '(helm-source-names-using-follow (quote ("RTags Helm" "Find tag from here")))
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
- '(package-selected-packages
-   (quote
-	(dashboard ggtags rtags yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab python-mode pug-mode paradox ox-jira org-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-ag gtags flycheck expand-region exec-path-from-shell esup company-jedi company-irony cmake-mode auto-highlight-symbol)))
  '(safe-local-variable-values
    (quote
 	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
@@ -119,7 +117,7 @@
   (package-install 'use-package))
 
 (require 'use-package)
-(setq use-package-always-ensure t)
+;;(setq use-package-always-ensure t)	
 
 ;; (use-package auctex
 ;;   :ensure t)
@@ -250,9 +248,10 @@
   (load-file "~/.emacs.d/jabber-ini.el"))
 
 (use-package magit
-  :bind ("C-x g" . magit-status)
-  ;; :map magit-mode-map
-  ;;  ([tab] . magit-section-toggle)))
+  :bind
+  (("C-x g" . magit-status)
+  :map magit-mode-map
+  ([tab] . magit-section-toggle))
   :config
   (if is-win
 	  (setq magit-git-executable "C:\\Program Files\\Git\\bin\\git.exe")))
@@ -284,11 +283,13 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((octave . t)
-	 (sh . t)
+	 (shell . t)
 	 (python . t)
-	 (emacs-lisp . t)   
+	 (emacs-lisp . t)
+	 (js . t)
 	 ))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
   (setq org-confirm-babel-evaluate nil))  
 
 (use-package ob-ipython
@@ -388,7 +389,7 @@
   (add-hook 'javascript-mode-hook 'helm-gtags-mode))
 
 (use-package rtags
-  :defer
+  ;;:defer
   :init  
   (require 'rtags-helm)
   :config
@@ -434,13 +435,14 @@
 ;; RTags
 ;;----------------------------------------------------------------------------
 (defun use-rtags (&optional useFileManager)
-  (and (rtags-executable-find "rc")
-       (cond ((not (gtags-get-rootpath)) t)
-             ((and (not (eq major-mode 'c++-mode))
-                   (not (eq major-mode 'c-mode))) (rtags-has-filemanager))
-             (useFileManager (rtags-has-filemanager))
-             (t (rtags-is-indexed)))))
+  (if (rtags-executable-find "rc") t))
+       ;; (cond ((not (gtags-get-rootpath)) t)
+       ;;       ((and (not (eq major-mode 'c++-mode))
+       ;;             (not (eq major-mode 'c-mode))) (rtags-has-filemanager))
+       ;;       (useFileManager (rtags-has-filemanager))
+       ;;       (t (rtags-is-indexed)))))
 
+(use-rtags)
 (defun tags-find-symbol-at-point (&optional prefix)
   (interactive "P")
   (if (or (not (use-rtags))
@@ -853,9 +855,3 @@ current buffer's, reload dir-locals."
 (define-key global-map "\C-cn"
   (lambda () (interactive) (org-capture nil "n")))
 
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )

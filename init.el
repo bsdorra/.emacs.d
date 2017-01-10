@@ -245,6 +245,10 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
 
+(use-package jabber
+  :config
+  (load-file "~/.emacs.d/jabber-ini.el"))
+
 (use-package magit
   :bind ("C-x g" . magit-status)
   ;; :map magit-mode-map

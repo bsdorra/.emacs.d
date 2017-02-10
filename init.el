@@ -6,14 +6,45 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(compilation-message-face (quote default))
+ '(custom-safe-themes
+   (quote
+	("c7a9a68bd07e38620a5508fef62ec079d274475c8f92d75ed0c33c45fbe306bc" default)))
  '(global-font-lock-mode t)
- '(helm-source-names-using-follow (quote ("RTags Helm" "Find tag from here")))
+ '(helm-source-names-using-follow
+   (quote
+	("Search at e:/dev/p2render/" "RTags Helm" "Find tag from here")))
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
+ '(org-agenda-files
+   (quote
+	("e:/projects/mss_paper/content/content.org" "z:/org/gtd.org" "z:/org/journal.org")))
+ '(package-selected-packages
+   (quote
+	(org-ref yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox org-jira ob-ipython ob-http nyan-mode multiple-cursors monokai-theme markdown-mode magit key-chord json-mode jabber ivy iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-bibtex helm-ag gtags ggtags flycheck expand-region exec-path-from-shell esup ebib dashboard company-jedi company-irony cmake-mode auto-highlight-symbol)))
+ '(paradox-github-token t)
  '(safe-local-variable-values
    (quote
-	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
+	((org-export-latex-listings quote minted)
+	 (bibtex-completion-library-path . "./paper")
+	 (org-todo-keyword-faces
+	  ("DONE" . "green")
+	  ("ITERATE" . "red")
+	  ("REVIEW" . "lightblue"))
+	 (org-todo-keyword-faces
+	  ("TODO" . org-warning)
+	  ("DONE" . "green")
+	  ("ITERATE" . "red")
+	  ("REVIEW" . "blue"))
+	 (org-todo-keyword-faces
+	  ("DONE" . "green")
+	  ("ITERATE" . "red")
+	  ("REVIEW" . "blue"))
+	 (auto-fill-mode . t)
+	 (org-ref-bibliography-notes . "notes.org")
+	 (helm-bibtex-library-path . "./paper")
+	 (org-ref-pdf-directory . "./paper")
+	 (projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
 	 (projectile-project-run-cmd . "\".build/RelWithDebInfo/p2studio.exe\"")
 	 (projectile-project-compilation-cmd . "cmake .build --target p2studio --config RelWithDebInf")
 	 (projectile-project-run-cmd . ".build/RelWithDebInfo/p2studio.exe")
@@ -48,12 +79,12 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
 (semantic-mode t) 
 (global-linum-mode t) ;; show line numbers
-(menu-bar-mode 0)
+(menu-bar-mode t)
 (tool-bar-mode 0)
+(setq initial-scratch-message "")
 (setq column-number-mode t);; enable column numbers
 (setq fill-column 80)
 (setq ns-pop-up-frames nil) ;; no new frame for file opened from finder
-(setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
@@ -84,6 +115,13 @@
 (global-visual-line-mode)
 (winner-mode)
 
+
+(cond
+ ((executable-find "aspell")
+  (setq ispell-program-name "aspell")
+  ;; Please note ispell-extra-args contains ACTUAL parameters passed to aspell
+  (setq ispell-extra-args '("--sug-mode=ultra" "--lang=en_US"))))
+
 ;;----------------------------------------------------------------------------
 ;; Emacs config
 ;;----------------------------------------------------------------------------
@@ -105,10 +143,15 @@
 ;;----------------------------------------------------------------------------
 (require 'package)
 (setq package-enable-at-startup nil)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
-;;(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("marmalade" . "https://marmalade-repo.org/packages/")
+						 ("melpa" . "https://stable.melpa.org/packages/")))
+						 ;; ("melpa" . "https://melpa.org/packages/"))) 
+
+
+;; ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
+;; (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
 (package-initialize)
 
 ;; Bootstrap 'use-package'
@@ -142,7 +185,7 @@
   (define-key company-active-map [tab] 'company-complete-common-or-cycle)
   (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
   (setq company-dabbrev-downcase case-replace)
-  (setq company-idle-delay 1)
+  (setq company-idle-delay 2)
   (when is-mac(push 'company-rtags company-backends))
   (use-package company-irony
   	:ensure t
@@ -158,7 +201,7 @@
 	(add-hook 'irony-mode-hook 'my-irony-mode-hook)
 	(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
   (use-package company-jedi
-	;;:disabled
+	:disabled
     :config
     (add-to-list 'company-backends 'company-jedi)
 	(defun my/python-mode-hook ()
@@ -204,7 +247,7 @@
    ("C-x C-f" . helm-find-files)
    ("M-y" . helm-show-kill-ring)
    :map helm-map
-   ("C-i" . helm-execute-persistent-action)
+   ("C-j" . helm-execute-persistent-action)
    ("C-z" .  helm-select-action))
   :config
   (helm-mode)
@@ -283,20 +326,32 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((octave . t)
-	 (shell . t)
 	 (python . t)
 	 (emacs-lisp . t)
 	 (js . t)
+	 (http . t)
 	 ))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
-  (setq org-confirm-babel-evaluate nil))  
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-return-follows-link t)
+  (setq org-src-fontify-natively t)
+  )  
 
-(use-package ob-ipython
+(use-package org-ref
+  :config  
+  (when is-win (setq bibtex-completion-pdf-open-function
+		(lambda (fpath)
+		  (call-process "sumatraPDF" nil 0 nil fpath))))
+  (setq bibtex-completion-pdf-symbol "⌘")
+  (setq bibtex-completion-notes-symbol "✎"))
+
+(use-package ob-http
   :defer)
 
-(use-package ox-jira
-  :defer)
+(use-package ob-ipython)
+
+;;(use-package ox-jira)			
 
 (use-package paradox
   :defer)
@@ -363,17 +418,17 @@
 (use-package yasnippet
   ;; :disabled
   ;;:diminish yas-minor-mode
-  :commands
-  (yas-minor-mode)
-  :init
+  ;;:commands
+  ;;(yas-minor-mode)
+;;  :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )
   :config
   (yas-minor-mode)
-  (progn
-	(yas-reload-all))
-	(add-hook 'prog-mode-hook #'yas-minor-mode)
-	(add-hook 'org-mode-hook  #'yas-minor-mode))
-
+  ;; (progn
+  ;; 	(yas-reload-all))
+  ;; 	(add-hook 'prog-mode-hook #'yas-minor-mode)
+  ;; 	(add-hook 'org-mode-hook  #'yas-minor-mode))
+)
 
 (use-package helm-gtags
  ;; :commands(helm-gtgas-mode)
@@ -811,6 +866,8 @@ current buffer's, reload dir-locals."
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
+(add-to-list 'auto-mode-alist '("\\.gltf\\'" . json-mode))
+
 
 
 (defun switch-to-other-window-in-split ()
@@ -855,3 +912,9 @@ current buffer's, reload dir-locals."
 (define-key global-map "\C-cn"
   (lambda () (interactive) (org-capture nil "n")))
 
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

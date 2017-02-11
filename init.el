@@ -11,6 +11,9 @@
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
+ '(package-selected-packages
+   (quote
+	(emmet-mode ox-gfm yasnippet which-key wgrep-helm wavefront-obj-mode use-package swoop smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox ox-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-ag flycheck expand-region exec-path-from-shell esup company-quickhelp company-jedi company-irony cmake-mode auto-highlight-symbol)))
  '(safe-local-variable-values
    (quote
 	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
@@ -243,9 +246,14 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
 
-(use-package jabber
+;; (use-package jabber
+;;   :config
+;;   (load-file "~/.emacs.d/jabber-ini.el"))
+
+(use-package json-mode
+  ;;:defer
   :config
-  (load-file "~/.emacs.d/jabber-ini.el"))
+  (json-mode))
 
 (use-package magit
   :bind
@@ -626,7 +634,7 @@ the line."
 (setq org-log-done t)
 (setq org-startup-indented 'enabled)
 (setq org-startup-folded 'overview)
-(setq org-default-notes-file "gtd.org")
+(setq org-default-notes-file "~/org/gtd.org")
 (setq org-default-journal-file "~/org/journal.org")
 (setq org-agenda-filter nil)
 (setq org-blank-before-new-entry (quote ((heading) (plain-list-item))))
@@ -855,3 +863,9 @@ current buffer's, reload dir-locals."
 (define-key global-map "\C-cn"
   (lambda () (interactive) (org-capture nil "n")))
 
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

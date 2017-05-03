@@ -16,13 +16,6 @@
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
- '(org-agenda-files
-   (quote
-	("e:/projects/mss_paper/content/content.org" "z:/org/gtd.org" "z:/org/journal.org")))
- '(package-selected-packages
-   (quote
-	(adoc-mode org-ref yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox org-jira ob-ipython ob-http nyan-mode multiple-cursors monokai-theme markdown-mode magit key-chord json-mode jabber ivy iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-bibtex helm-ag gtags ggtags flycheck expand-region exec-path-from-shell esup ebib dashboard company-jedi company-irony cmake-mode auto-highlight-symbol)))
- '(paradox-github-token t)
  '(safe-local-variable-values
    (quote
 	((org-export-latex-listings quote minted)
@@ -286,9 +279,14 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
 
-(use-package jabber
+;; (use-package jabber
+;;   :config
+;;   (load-file "~/.emacs.d/jabber-ini.el"))
+
+(use-package json-mode
+  ;;:defer
   :config
-  (load-file "~/.emacs.d/jabber-ini.el"))
+  (json-mode))
 
 (use-package magit
   :bind
@@ -681,7 +679,7 @@ the line."
 (setq org-log-done t)
 (setq org-startup-indented 'enabled)
 (setq org-startup-folded 'overview)
-(setq org-default-notes-file "gtd.org")
+(setq org-default-notes-file "~/org/gtd.org")
 (setq org-default-journal-file "~/org/journal.org")
 (setq org-agenda-filter nil)
 (setq org-blank-before-new-entry (quote ((heading) (plain-list-item))))

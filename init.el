@@ -21,7 +21,7 @@
 	("e:/projects/mss_paper/content/content.org" "z:/org/gtd.org" "z:/org/journal.org")))
  '(package-selected-packages
    (quote
-	(org-ref yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox org-jira ob-ipython ob-http nyan-mode multiple-cursors monokai-theme markdown-mode magit key-chord json-mode jabber ivy iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-bibtex helm-ag gtags ggtags flycheck expand-region exec-path-from-shell esup ebib dashboard company-jedi company-irony cmake-mode auto-highlight-symbol)))
+	(adoc-mode org-ref yasnippet which-key wgrep web-mode visible-mark use-package swoop smooth-scroll smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox org-jira ob-ipython ob-http nyan-mode multiple-cursors monokai-theme markdown-mode magit key-chord json-mode jabber ivy iedit helm-swoop helm-projectile helm-package helm-gtags helm-company helm-bibtex helm-ag gtags ggtags flycheck expand-region exec-path-from-shell esup ebib dashboard company-jedi company-irony cmake-mode auto-highlight-symbol)))
  '(paradox-github-token t)
  '(safe-local-variable-values
    (quote
@@ -372,12 +372,12 @@
   :mode ("\\.pug\\'" . pug-mode))
 
 (use-package python-mode
-  :disabled								
+  ;; :disabled								
   :config
   (add-hook 'python-mode-hook
 			(lambda ()			
-			  (setq indent-tabs-mode t)
-			  (setq py-indent-tabs-mode t)
+			  (setq-default indent-tabs-mode nil)
+			  (setq-default py-indent-tabs-mode nil)
 			  (setq tab-width 4)
 			  (setq python-indent 4))))
 
@@ -391,18 +391,19 @@
 (use-package smart-tabs-mode
   :config
   (smart-tabs-insinuate 'c++ 'c 'javascript 'python)
-  (smart-tabs-advice py-indent-line py-indent-offset)
-  (smart-tabs-advice py-newline-and-indent py-indent-offset)
-  (smart-tabs-advice py-indent-region py-indent-offset)
-  (smart-tabs-advice python-indent-line-1 python-indent)
-  (add-hook 'python-mode-hook
-			(lambda ()
-			  (setq indent-tabs-mode t)
-			  (setq indent-tabs-mode t)
-			  (setq py-indent-tabs-mode t)
-			  (setq tab-width 4)
-			  (setq python-indent 4)
-			  (setq tab-width (default-value 'tab-width)))))
+  ;; (smart-tabs-advice py-indent-line py-indent-offset)
+  ;; (smart-tabs-advice py-newline-and-indent py-indent-offset)
+  ;; (smart-tabs-advice py-indent-region py-indent-offset)
+  ;; (smart-tabs-advice python-indent-line-1 python-indent)
+  ;; (add-hook 'python-mode-hook
+  ;; 			(lambda ()
+  ;; 			  (setq indent-tabs-mode t)
+  ;; 			  (setq indent-tabs-mode t)
+  ;; 			  (setq py-indent-tabs-mode t)
+  ;; 			  (setq tab-width 4)
+  ;; 			  (setq python-indent 4)
+  ;; 			  (setq tab-width (default-value 'tab-width))))
+  )
 
 
 (use-package swoop)
@@ -676,7 +677,6 @@ the line."
 (global-set-key "\C-cb" 'org-iswitchb)
 (define-key global-map "\C-cc" 'org-capture)
 
-(add-to-list 'auto-mode-alist '("/.org/'" . org-mode))
 (add-hook 'org-mode-hook 'turn-on-font-lock) ; not needed when global-font-lock-mode is on
 (setq org-log-done t)
 (setq org-startup-indented 'enabled)
@@ -867,6 +867,7 @@ current buffer's, reload dir-locals."
 (add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 (add-to-list 'auto-mode-alist '("\\.gltf\\'" . json-mode))
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
 
 
 

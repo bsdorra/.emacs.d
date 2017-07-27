@@ -13,7 +13,8 @@
  '(mark-ring-max 64)
  '(package-selected-packages
    (quote
-	(emmet-mode ox-gfm yasnippet which-key wgrep-helm wavefront-obj-mode use-package swoop smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox ox-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-ag flycheck expand-region exec-path-from-shell esup company-quickhelp company-jedi company-irony cmake-mode auto-highlight-symbol)))
+	(opencl-mode lua-mode web-mode php-mode emmet-mode ox-gfm yasnippet which-key wgrep-helm wavefront-obj-mode use-package swoop smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox ox-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-ag flycheck expand-region exec-path-from-shell esup company-quickhelp company-jedi company-irony cmake-mode auto-highlight-symbol)))
+ '(paradox-github-token t)
  '(safe-local-variable-values
    (quote
 	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
@@ -30,20 +31,20 @@
 ;;----------------------------------------------------------------------------
 ;; General Settings
 ;;----------------------------------------------------------------------------
-(setq debug-on-error nil)
-(server-start)			  
-;;(load "server")
-;;(unless (server-running-p) (server-start))
-
 (defvar is-mac (equal system-type 'darwin))
 (defvar is-win (equal system-type 'windows-nt))
 (defvar is-linux (string-equal system-type "gnu/linux"))
+
+(setq debug-on-error nil)
+;; (server-start)			  
+;;(load "server")
 
 (when is-mac
   (set-frame-font "-apple-Monaco-medium-normal-normal-*-10-*-*-*-m-0-iso10646-1")
   (setq mac-command-modifier 'meta)) ;; set cmd key to alt
 (when is-win
-  (set-frame-font "DejaVu Sans Mono-8" nil t))
+  (set-frame-font "DejaVu Sans Mono-8" nil t)
+  (server-start))
   ;;(set-frame-font "Lucida Sans Unicode-10" nil t))
 
 ;; start size
@@ -246,9 +247,20 @@
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode))
 
-;; (use-package jabber
-;;   :config
-;;   (load-file "~/.emacs.d/jabber-ini.el"))
+(use-package jabber
+  :disabled
+  :config
+  (load-file "~/.emacs.d/jabber-ini.el"))
+
+(use-package autosmiley
+  :config
+
+
+
+
+
+  (add-hook 'jabber-chat-mode-hook 'autosmiley-mode))
+
 
 (use-package json-mode
   ;;:defer
@@ -364,12 +376,14 @@
 
 ;; (use-package wgrep)
 
+(use-package web-mode)
+
 (use-package which-key
   :config
   (which-key-mode))
 
 (use-package yasnippet
-  ;; :disabled
+  :disabled
   ;;:diminish yas-minor-mode
   :commands
   (yas-minor-mode)
@@ -819,6 +833,8 @@ current buffer's, reload dir-locals."
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
+(add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\'" . html-mode))
 
 
 (defun switch-to-other-window-in-split ()
@@ -854,6 +870,10 @@ current buffer's, reload dir-locals."
 (global-set-key (kbd "<f9>") 'reload-config)
 (global-set-key (kbd "<f10>") 'config)
 (global-set-key (kbd "<f12>") 'commit-and-push-config)
+
+(add-hook 'c-mode-common-hook
+		  (lambda() 
+			(local-set-key  (kbd "C-c o") 'ff-find-other-file)))
 
 
 (define-key global-map "\C-ct"

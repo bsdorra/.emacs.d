@@ -6,18 +6,38 @@
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(compilation-message-face (quote default))
+ '(custom-safe-themes
+   (quote
+	("c7a9a68bd07e38620a5508fef62ec079d274475c8f92d75ed0c33c45fbe306bc" default)))
  '(global-font-lock-mode t)
- '(helm-source-names-using-follow (quote ("RTags Helm" "Find tag from here")))
+ '(helm-source-names-using-follow
+   (quote
+	("Search at e:/dev/p2render/" "RTags Helm" "Find tag from here")))
  '(inhibit-startup-screen t)
  '(magit-diff-use-overlays nil)
  '(mark-ring-max 64)
- '(package-selected-packages
-   (quote
-	(opencl-mode lua-mode web-mode php-mode emmet-mode ox-gfm yasnippet which-key wgrep-helm wavefront-obj-mode use-package swoop smartscan smart-tabs-mode smart-tab rtags python-mode pug-mode paradox ox-jira ob-ipython nyan-mode multiple-cursors monokai-theme markdown-mode magit json-mode jabber iedit helm-swoop helm-projectile helm-package helm-gtags helm-ag flycheck expand-region exec-path-from-shell esup company-quickhelp company-jedi company-irony cmake-mode auto-highlight-symbol)))
- '(paradox-github-token t)
  '(safe-local-variable-values
    (quote
-	((projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
+	((org-export-latex-listings quote minted)
+	 (bibtex-completion-library-path . "./paper")
+	 (org-todo-keyword-faces
+	  ("DONE" . "green")
+	  ("ITERATE" . "red")
+	  ("REVIEW" . "lightblue"))
+	 (org-todo-keyword-faces
+	  ("TODO" . org-warning)
+	  ("DONE" . "green")
+	  ("ITERATE" . "red")
+	  ("REVIEW" . "blue"))
+	 (org-todo-keyword-faces
+	  ("DONE" . "green")
+	  ("ITERATE" . "red")
+	  ("REVIEW" . "blue"))
+	 (auto-fill-mode . t)
+	 (org-ref-bibliography-notes . "notes.org")
+	 (helm-bibtex-library-path . "./paper")
+	 (org-ref-pdf-directory . "./paper")
+	 (projectile-project-compilation-cmd . "cmake --build .build --target p2studio --config RelWithDebInfo")
 	 (projectile-project-run-cmd . "\".build/RelWithDebInfo/p2studio.exe\"")
 	 (projectile-project-compilation-cmd . "cmake .build --target p2studio --config RelWithDebInf")
 	 (projectile-project-run-cmd . ".build/RelWithDebInfo/p2studio.exe")
@@ -52,12 +72,12 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp/")
 (semantic-mode t) 
 (global-linum-mode t) ;; show line numbers
-(menu-bar-mode 0)
+(menu-bar-mode t)
 (tool-bar-mode 0)
+(setq initial-scratch-message "")
 (setq column-number-mode t);; enable column numbers
 (setq fill-column 80)
 (setq ns-pop-up-frames nil) ;; no new frame for file opened from finder
-(setq-default ispell-program-name "aspell")
 (setq next-line-add-newlines t) ;; C-n adds new lines at the end of the buffer
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
@@ -88,6 +108,13 @@
 (global-visual-line-mode)
 (winner-mode)
 
+
+(cond
+ ((executable-find "aspell")
+  (setq ispell-program-name "aspell")
+  ;; Please note ispell-extra-args contains ACTUAL parameters passed to aspell
+  (setq ispell-extra-args '("--sug-mode=ultra" "--lang=en_US"))))
+
 ;;----------------------------------------------------------------------------
 ;; Emacs config
 ;;----------------------------------------------------------------------------
@@ -109,10 +136,15 @@
 ;;----------------------------------------------------------------------------
 (require 'package)
 (setq package-enable-at-startup nil)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
-;;(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("marmalade" . "https://marmalade-repo.org/packages/")
+						 ("melpa" . "https://stable.melpa.org/packages/")))
+						 ;; ("melpa" . "https://melpa.org/packages/"))) 
+
+
+;; ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
+;; (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
 (package-initialize)
 
 ;; Bootstrap 'use-package'
@@ -146,7 +178,7 @@
   (define-key company-active-map [tab] 'company-complete-common-or-cycle)
   (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
   (setq company-dabbrev-downcase case-replace)
-  (setq company-idle-delay 1)
+  (setq company-idle-delay 2)
   (when is-mac(push 'company-rtags company-backends))
   (use-package company-irony
   	:ensure t
@@ -162,7 +194,7 @@
 	(add-hook 'irony-mode-hook 'my-irony-mode-hook)
 	(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
   (use-package company-jedi
-	;;:disabled
+	:disabled
     :config
     (add-to-list 'company-backends 'company-jedi)
 	(defun my/python-mode-hook ()
@@ -208,7 +240,7 @@
    ("C-x C-f" . helm-find-files)
    ("M-y" . helm-show-kill-ring)
    :map helm-map
-   ("C-i" . helm-execute-persistent-action)
+   ("C-j" . helm-execute-persistent-action)
    ("C-z" .  helm-select-action))
   :config
   (helm-mode)
@@ -267,6 +299,8 @@
   :config
   (json-mode))
 
+(use-package lua-mode)
+
 (use-package magit
   :bind
   (("C-x g" . magit-status)
@@ -303,20 +337,32 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((octave . t)
-	 (shell . t)
 	 (python . t)
 	 (emacs-lisp . t)
 	 (js . t)
+	 (http . t)
 	 ))
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
-  (setq org-confirm-babel-evaluate nil))  
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-return-follows-link t)
+  (setq org-src-fontify-natively t)
+  )  
 
-(use-package ob-ipython
+(use-package org-ref
+  :config  
+  (when is-win (setq bibtex-completion-pdf-open-function
+		(lambda (fpath)
+		  (call-process "sumatraPDF" nil 0 nil fpath))))
+  (setq bibtex-completion-pdf-symbol "⌘")
+  (setq bibtex-completion-notes-symbol "✎"))
+
+(use-package ob-http
   :defer)
 
-(use-package ox-jira
-  :defer)
+(use-package ob-ipython)
+
+;;(use-package ox-jira)			
 
 (use-package paradox
   :defer)
@@ -337,12 +383,12 @@
   :mode ("\\.pug\\'" . pug-mode))
 
 (use-package python-mode
-  :disabled								
+  ;; :disabled								
   :config
   (add-hook 'python-mode-hook
 			(lambda ()			
-			  (setq indent-tabs-mode t)
-			  (setq py-indent-tabs-mode t)
+			  (setq-default indent-tabs-mode nil)
+			  (setq-default py-indent-tabs-mode nil)
 			  (setq tab-width 4)
 			  (setq python-indent 4))))
 
@@ -356,18 +402,19 @@
 (use-package smart-tabs-mode
   :config
   (smart-tabs-insinuate 'c++ 'c 'javascript 'python)
-  (smart-tabs-advice py-indent-line py-indent-offset)
-  (smart-tabs-advice py-newline-and-indent py-indent-offset)
-  (smart-tabs-advice py-indent-region py-indent-offset)
-  (smart-tabs-advice python-indent-line-1 python-indent)
-  (add-hook 'python-mode-hook
-			(lambda ()
-			  (setq indent-tabs-mode t)
-			  (setq indent-tabs-mode t)
-			  (setq py-indent-tabs-mode t)
-			  (setq tab-width 4)
-			  (setq python-indent 4)
-			  (setq tab-width (default-value 'tab-width)))))
+  ;; (smart-tabs-advice py-indent-line py-indent-offset)
+  ;; (smart-tabs-advice py-newline-and-indent py-indent-offset)
+  ;; (smart-tabs-advice py-indent-region py-indent-offset)
+  ;; (smart-tabs-advice python-indent-line-1 python-indent)
+  ;; (add-hook 'python-mode-hook
+  ;; 			(lambda ()
+  ;; 			  (setq indent-tabs-mode t)
+  ;; 			  (setq indent-tabs-mode t)
+  ;; 			  (setq py-indent-tabs-mode t)
+  ;; 			  (setq tab-width 4)
+  ;; 			  (setq python-indent 4)
+  ;; 			  (setq tab-width (default-value 'tab-width))))
+  )
 
 
 (use-package swoop)
@@ -385,17 +432,17 @@
 (use-package yasnippet
   :disabled
   ;;:diminish yas-minor-mode
-  :commands
-  (yas-minor-mode)
-  :init
+  ;;:commands
+  ;;(yas-minor-mode)
+;;  :init
   ;; (setq yas-snippet-dirs "~/.emacs.d/snippets/" )
   :config
   (yas-minor-mode)
-  (progn
-	(yas-reload-all))
-	(add-hook 'prog-mode-hook #'yas-minor-mode)
-	(add-hook 'org-mode-hook  #'yas-minor-mode))
-
+  ;; (progn
+  ;; 	(yas-reload-all))
+  ;; 	(add-hook 'prog-mode-hook #'yas-minor-mode)
+  ;; 	(add-hook 'org-mode-hook  #'yas-minor-mode))
+)
 
 (use-package helm-gtags
  ;; :commands(helm-gtgas-mode)
@@ -643,7 +690,6 @@ the line."
 (global-set-key "\C-cb" 'org-iswitchb)
 (define-key global-map "\C-cc" 'org-capture)
 
-(add-to-list 'auto-mode-alist '("/.org/'" . org-mode))
 (add-hook 'org-mode-hook 'turn-on-font-lock) ; not needed when global-font-lock-mode is on
 (setq org-log-done t)
 (setq org-startup-indented 'enabled)
@@ -835,6 +881,9 @@ current buffer's, reload dir-locals."
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 (add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\'" . html-mode))
+(add-to-list 'auto-mode-alist '("\\.gltf\\'" . json-mode))
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+(add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-mode))
 
 
 (defun switch-to-other-window-in-split ()
